@@ -1,0 +1,3 @@
+[submodule "power-voronoi-diagram"]
+	path = power-voronoi-diagram
+	url = https://github.com/fachammer/power-voronoi-diagram
