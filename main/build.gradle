@@ -1,0 +1,51 @@
+apply plugin: 'maven'
+apply plugin: 'java'
+apply plugin: 'application'
+
+mainClassName = 'com.fabianachammer.procgenf.main.Main'
+
+repositories {
+    mavenCentral()
+}
+
+sourceSets.all { set ->
+  def jarTask = task("${set.name}Jar", type: Jar) {
+      baseName = baseName + "-$set.name"
+      from set.output
+  }
+
+  artifacts {
+    archives jarTask
+  }
+}
+
+sourceSets {
+  api
+  impl
+}
+
+
+dependencies {
+  ext.lwjglVersion = "3.0.0b"
+  apiCompile 'commons-codec:commons-codec:1.5'
+  apiCompile project(':power-voronoi-diagram')
+
+  //implCompile project(':power-voronoi-diagram')
+  implCompile sourceSets.api.output
+  implCompile 'commons-lang:commons-lang:2.6'
+  implCompile "org.lwjgl:lwjgl:$lwjglVersion"
+  implCompile "org.lwjgl:lwjgl-platform:$lwjglVersion:natives-windows"
+  implCompile "org.lwjgl:lwjgl-platform:$lwjglVersion:natives-linux"
+  implCompile "org.lwjgl:lwjgl-platform:$lwjglVersion:natives-osx"
+
+  testCompile 'junit:junit:4.9'
+  testCompile sourceSets.api.output
+  testCompile sourceSets.impl.output
+  runtime configurations.apiRuntime
+  runtime configurations.implRuntime
+}
+
+jar {
+    from sourceSets.api.output
+    from sourceSets.impl.output
+}
