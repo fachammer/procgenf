@@ -1,56 +1,53 @@
 package com.fabianachammer.procgenf.main;
 
-import java.awt.Canvas;
-import java.awt.Graphics;
-import java.awt.Polygon;
-import java.util.Random;
+import javafx.application.Application;
+import javafx.scene.Scene;
+import javafx.scene.shape.Polygon;
+import javafx.stage.Stage;
 
-import javax.swing.JFrame;
-
-import kn.uni.voronoitreemap.datastructure.OpenList;
-import kn.uni.voronoitreemap.diagram.PowerDiagram;
-import kn.uni.voronoitreemap.j2d.PolygonSimple;
-import kn.uni.voronoitreemap.j2d.Site;
-
-public class Main extends Canvas {
-	
-	private static final long serialVersionUID = -1609623198152343250L;
-	private PowerDiagram diagram;
-	
-	public Main() {
-		diagram = new PowerDiagram();
-		OpenList sites = new OpenList();
-    	Random random = new Random();
-    	for(int i = 0; i < 10; i++){
-    		double x = random.nextDouble() * 400;
-    		double y = random.nextDouble() * 400;
-    		Site s = new Site(x, y, 0);
-    		sites.add(s);
-    	}
-    	diagram.setSites(sites);
-    	PolygonSimple clipPolygon = new PolygonSimple(new double[]{0, 0, 400, 400}, new double[] {0, 400, 400, 0});
-    	diagram.setClipPoly(clipPolygon);
-    	diagram.computeDiagram();
-	}
+public class Main extends Application {
 	
     public static void main(String[] args) {
-    	JFrame frame = new JFrame();
-    	frame.setDefaultCloseOperation(JFrame.EXIT_ON_CLOSE);
-        frame.setSize(400, 400);
-    	frame.setVisible(true);
-    	
-    	Main mainCanvas = new Main();
-    	mainCanvas.setSize(400, 400);
-    	frame.add(mainCanvas);	
+    	launch(args);
     }
-    
-    @Override
-    public void paint(Graphics graphics) {
-    	for(Site s : diagram.getSites()) {
-    		PolygonSimple sitePolygon = s.getPolygon();
-    		Polygon polygon = new Polygon(sitePolygon.getXpointsClosed(), sitePolygon.getYpointsClosed(), sitePolygon.length);
-    		graphics.drawPolygon(polygon);
-    		graphics.fillOval((int) Math.round(s.x), (int) Math.round(s.y), 5, 5);
-    	}
-    }
+
+	@Override
+	public void start(Stage primaryStage) throws Exception {
+		VoronoiGroup root = new VoronoiGroup();
+		
+		VoronoiGroup region1 = new VoronoiGroup();
+		region1.setTranslateX(100);
+		region1.setTranslateY(200);
+		root.getChildren().add(region1);
+		
+		VoronoiGroup region2 = new VoronoiGroup();
+		region2.setTranslateX(200);
+		region2.setTranslateY(100);
+		root.getChildren().add(region2);
+		
+		VoronoiGroup region3 = new VoronoiGroup();
+		region3.setTranslateX(300);
+		region3.setTranslateY(300);
+		root.getChildren().add(region3);
+		
+		
+		Scene scene = new Scene(root, 400, 400);
+		root.setClippingPolygon(sceneClipPolygon(scene));
+
+		scene.widthProperty().addListener(x -> {
+			root.setClippingPolygon(sceneClipPolygon(scene));
+		});
+		scene.heightProperty().addListener(x -> {
+	    	root.setClippingPolygon(sceneClipPolygon(scene));
+		});
+		primaryStage.setTitle("Recursive on-line Voronoi region generation");
+		primaryStage.setScene(scene);
+		primaryStage.show();
+	}
+	
+	private static Polygon sceneClipPolygon(Scene scene) {
+		double width = scene.getWidth();
+		double height = scene.getHeight();
+		return new Polygon(0.0, 0.0, 0.0, height, width, height, width, 0.0);
+	}
 }

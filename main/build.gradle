@@ -26,12 +26,9 @@ sourceSets {
 
 
 dependencies {
-  apiCompile 'commons-codec:commons-codec:1.5'
   apiCompile project(':power-voronoi-diagram')
 
-  //implCompile project(':power-voronoi-diagram')
   implCompile sourceSets.api.output
-  implCompile 'commons-lang:commons-lang:2.6'
 
   testCompile 'junit:junit:4.9'
   testCompile sourceSets.api.output
