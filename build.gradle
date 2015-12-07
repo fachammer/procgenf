@@ -1,5 +1,9 @@
 evaluationDependsOnChildren()
 
+allprojects {
+	apply plugin: 'eclipse'
+}
+
 subprojects {
   group = "fabianachammer"
   version = 0.1
