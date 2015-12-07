@@ -10,7 +10,7 @@ public class Main {
 			application = (Application) Class.forName(APPLICATION_IMPLEMENTATION).newInstance();
 			application.run(args);
 		} catch (Exception e) {
-			System.err.println(e);
+			e.printStackTrace();
 		}
     }
 }

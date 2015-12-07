@@ -3,6 +3,7 @@ apply plugin: 'java'
 apply plugin: 'application'
 
 mainClassName = 'com.fabianachammer.procgenf.main.Main'
+applicationDefaultJvmArgs = ["-XstartOnFirstThread", "-Djava.awt.headless=true"]
 
 repositories {
     mavenCentral()
@@ -25,7 +26,8 @@ sourceSets {
 }
 
 dependencies {
-  ext.lwjglVersion = "3.0.0b"
+  ext.lwjglVersion = '3.0.0b'
+  ext.jomlVersion = '1.6.6'
   
   implCompile sourceSets.api.output
   implCompile project(':power-voronoi-diagram')
@@ -33,6 +35,7 @@ dependencies {
   implCompile "org.lwjgl:lwjgl-platform:$lwjglVersion:natives-windows"
   implCompile "org.lwjgl:lwjgl-platform:$lwjglVersion:natives-linux"
   implCompile "org.lwjgl:lwjgl-platform:$lwjglVersion:natives-osx"
+  implCompile "org.joml:joml:$jomlVersion"
 
   testCompile 'junit:junit:4.9'
   testCompile sourceSets.api.output
