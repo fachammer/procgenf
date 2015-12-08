@@ -7,16 +7,11 @@ import kn.uni.voronoitreemap.j2d.PolygonSimple;
 import org.lwjgl.*;
 import org.lwjgl.glfw.*;
 import org.lwjgl.opengl.*;
-import org.lwjgl.system.MathUtil;
-
 import static org.lwjgl.glfw.GLFW.*;
 import static org.lwjgl.opengl.GL11.*;
 import static org.lwjgl.system.MemoryUtil.*;
 
-import java.math.MathContext;
-
 import org.joml.Matrix3d;
-import org.joml.Matrix4d;
 import org.joml.Vector2d;
 import org.joml.Vector3d;
 
@@ -28,7 +23,6 @@ public class ApplicationImpl implements Application {
     private VoronoiNode root;
     private VoronoiRenderer voronoiRenderer;
     private boolean[] keyPressed = new boolean[512];
-    private long time = System.nanoTime();
     
 	public void run(String[] args) {
 		System.out.println("Hello LWJGL " + Version.getVersion() + "!");
@@ -87,27 +81,28 @@ public class ApplicationImpl implements Application {
 
         glfwShowWindow(window);
         
-        PolygonSimple clipPolygon = new PolygonSimple(
-        		new double[] { -1.1, -1.1, 1.1, 1.1 }, 
-        		new double[] { 1.1, -1.1, -1.1, 1.1 }
-        	);
+        clipPolygon.add(-11, 11);
+        clipPolygon.add(-11, -11);
+        clipPolygon.add(11, -11);
+        clipPolygon.add(11, 11);
+        
         root = node(0, 0, clipPolygon,
-        		node(0.5, 0.5, 
-        				node(0.1, 0.1), 
-        				node(-0.1, 0.1),
-        				node(-0.1, -0.1)),
-				node(-0.5, -0.5,
-						node(0.1, 0.1), 
-        				node(-0.1, 0.2),
-        				node(-0.1, -0.1)),
-				node(0.5, -0.5,
-						node(0.1, 0.1), 
-        				node(-0.1, 0.1),
-        				node(-0.1, -0.1)),
-				node(-0.5, 0.5,
-						node(0.1, 0.1), 
-        				node(-0.1, 0.1),
-        				node(-0.1, -0.1)));
+        		node(5, 5, 
+        				node(2.5, 2.5), 
+        				node(-2.5, 2.5),
+        				node(-2.5, -2.5)),
+				node(-5, -5,
+						node(2.5, 2.5), 
+        				node(-2.5, 2.5),
+        				node(-2.5, -2.5)),
+				node(5, -5,
+						node(2.5, 2.5), 
+        				node(-2.5, 2.5),
+        				node(-2.5, -2.5)),
+				node(-5, 5,
+						node(2.5, 2.5), 
+        				node(-2.5, 2.5),
+        				node(-2.5, -2.5)));
         voronoiRenderer = new VoronoiRenderer(root);
     }
     
@@ -126,10 +121,12 @@ public class ApplicationImpl implements Application {
     private double zoomLevel = 0.1;
     private static final double ZOOM_VELOCITY = 400;
     private static final double MIN_ZOOM_LEVEL = 0.01;
-    private static final double MAX_ZOOM_LEVEL = 10;
+    private static final double MAX_ZOOM_LEVEL = 0.5;
     private static final double CAMERA_SPEED = 10;
     private double deltaTime = 0.0;
     private Vector2d cameraPosition = new Vector2d();
+    private Matrix3d viewMatrix = new Matrix3d();
+    private PolygonSimple clipPolygon = new PolygonSimple();
     
     private void loop() {
         GL.createCapabilities();
@@ -158,11 +155,18 @@ public class ApplicationImpl implements Application {
             cameraTranslation.m20 = cameraPosition.x;
             cameraTranslation.m21 = cameraPosition.y;
             
-            Matrix3d viewMatrix = new Matrix3d()
-            		.mul(cameraTranslation)
+            viewMatrix.identity()
             		.scale(zoomLevel)
+            		.mul(cameraTranslation)
             		.lookAlong(new Vector3d(0, 0, 1), new Vector3d(0, 1, 0));
-            voronoiRenderer.render(viewMatrix);
+            	
+            
+            PolygonSimple clipPolygon = this.clipPolygon.clone();
+            clipPolygon.scale(1 / zoomLevel);
+            clipPolygon.translate(-cameraPosition.x, cameraPosition.y);
+           
+            
+            voronoiRenderer.render(viewMatrix, clipPolygon);
             
             glfwSwapBuffers(window);
  

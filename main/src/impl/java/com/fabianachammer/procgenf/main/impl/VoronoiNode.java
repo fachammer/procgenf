@@ -21,6 +21,9 @@ public class VoronoiNode {
 	private Vector2d localPosition;
 	private OpenList subSites;
 	private PolygonSimple clipPolygon;
+	private Matrix3d localToParentTransform = new Matrix3d();
+	private Matrix3d parentToLocalTransform = new Matrix3d();
+	private Matrix3d localToWorldTransform = new Matrix3d();
 	
 	public VoronoiNode() {
 		this(new Vector2d());
@@ -66,18 +69,24 @@ public class VoronoiNode {
 	
 	// Refresh must go top-down
 	private void refreshSubDiagram() {
-		// make sure that clip polygon is in same space as site
 		PolygonSimple clipPolygon = getClipPolygon();
 		
 		if(clipPolygon == null)
 			return;
 		
-		clipPolygon = VoronoiRenderer.transformPolygon(clipPolygon, getLocalToParentTransform().invert());
+		// make sure that clip polygon is in same space as site
+		clipPolygon = PolygonTransformer.transformPolygon(clipPolygon, getParentToLocalTransform());
 		subDiagram.setClipPoly(clipPolygon);
 		subDiagram.computeDiagram();
 		
 		for(VoronoiNode child : children)
 			child.refreshSubDiagram();
+	}
+	
+	public VoronoiNode setClipPolygon(PolygonSimple clipPolygon) {
+		this.clipPolygon = clipPolygon;
+		refreshSubDiagram();
+		return this;
 	}
 	
 	public PolygonSimple getPolygon() {
@@ -130,26 +139,37 @@ public class VoronoiNode {
 	}
 	
 	public Matrix3d getLocalToParentTransform() {
-		Matrix3d worldTransform = new Matrix3d();
-		worldTransform.m20 = localPosition.x;
-		worldTransform.m21 = localPosition.y;
-		return worldTransform;
+		return localToParentTransform;
+	}
+	
+	public Matrix3d getParentToLocalTransform() {
+		return parentToLocalTransform;
 	}
 	
 	public Matrix3d getLocalToWorldTransform() {
-		Matrix3d worldTransform = getLocalToParentTransform();
-		
+		localToWorldTransform.set(getLocalToParentTransform());
 		if(getParent() != null) {
-			worldTransform.mul(getParent().getLocalToWorldTransform());
+			localToWorldTransform.mul(getParent().getLocalToWorldTransform());
 		}
 		
-		return worldTransform;
+		return localToWorldTransform;
+	}
+	
+	public Vector2d getLocalPosition() {
+		return localPosition;
+	}
+	
+	private void refreshTransformMatrices(Vector2d localPosition) {
+		localToParentTransform.m20 = localPosition.x;
+		localToParentTransform.m21 = localPosition.y;
+		localToParentTransform.invert(parentToLocalTransform);
 	}
 	
 	public VoronoiNode setLocalPosition(Vector2d localPosition) {
 		if(localPosition != null) {
 			this.localPosition = localPosition;
 			this.site.setXY(localPosition.x, localPosition.y);
+			refreshTransformMatrices(localPosition);
 			
 			if(this.parent != null)
 				parent.refreshSubDiagram();
@@ -157,8 +177,10 @@ public class VoronoiNode {
 		return this;
 	}
 	
+	private static final Vector3d HOMOGENEOUS_ZERO_VECTOR = new Vector3d(0, 0, 1);
+	
 	public Vector2d getWorldPosition() {
-		Vector3d worldPosition = getLocalToWorldTransform().transform(new Vector3d(0, 0, 1));
+		Vector3d worldPosition = getLocalToWorldTransform().transform(HOMOGENEOUS_ZERO_VECTOR.set(0, 0, 1));
 		Vector2d worldPosition2d = new Vector2d(worldPosition.x, worldPosition.y);
 		return worldPosition2d;
 	}
