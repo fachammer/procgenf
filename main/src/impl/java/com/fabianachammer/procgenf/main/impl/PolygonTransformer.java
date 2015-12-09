@@ -10,7 +10,7 @@ public class PolygonTransformer {
 		PolygonSimple transformedPolygon = new PolygonSimple();
 
 		Vector3d vertex = new Vector3d();
-		for (int i = 0; i < polygon.getNumPoints(); i++) {
+		for(int i = 0; i < polygon.getNumPoints(); i++) {
 			vertex.set(polygon.getXPoints()[i], polygon.getYPoints()[i], 1);
 			transform.transform(vertex);
 			transformedPolygon.add(vertex.x, vertex.y);

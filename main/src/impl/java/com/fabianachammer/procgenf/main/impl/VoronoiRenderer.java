@@ -14,6 +14,9 @@ import org.joml.Matrix3d;
 import org.joml.Vector3d;
 import org.lwjgl.opengl.GL11;
 
+import com.flowpowered.noise.Noise;
+import com.flowpowered.noise.NoiseQuality;
+
 import kn.uni.voronoitreemap.j2d.PolygonSimple;
 
 public class VoronoiRenderer {
@@ -27,7 +30,7 @@ public class VoronoiRenderer {
 	}
 
 	private static void renderNodePoint(VoronoiNode node, Matrix3d viewMatrix) {
-		if (node.getParent() == null)
+		if(node.getParent() == null)
 			return;
 
 		GL11.glColor3d(0, 0, 0);
@@ -45,24 +48,34 @@ public class VoronoiRenderer {
 	private static final Matrix3d TEMP = new Matrix3d();
 
 	private static void renderNodePolygon(VoronoiNode node, Matrix3d viewMatrix) {
-		if (node.getDepth() <= 1)
+		if(node.getDepth() <= 0 || node.getPolygon() == null)
 			return;
 
 		TEMP.set(viewMatrix);
-		if (node.getParent() != null)
+		if(node.getParent() != null)
 			TEMP.mul(node.getParent().getLocalToWorldTransform());
 
-		double intensity = node.getDepth() / 3.0;
-		GL11.glColor3d(1.0, 0, 0);
-		glLineWidth(BASE_LINE_WIDTH / (node.getDepth() + 1));
-		glBegin(GL11.GL_TRIANGLE_FAN);{
-			glVertex2d(node.getLocalPosition().x, node.getLocalPosition().y);
-			renderPolygon(PolygonTransformer.transformPolygon(node.getPolygon(), TEMP));
-		}glEnd();
+		double red = Noise.valueCoherentNoise3D(node.getWorldPosition().x, node.getWorldPosition().y, 0, 1234, NoiseQuality.BEST) / 2 + 0.5;
+		double green = Noise.valueCoherentNoise3D(node.getWorldPosition().x, node.getWorldPosition().y, 0, 4321, NoiseQuality.BEST) / 2 + 0.5;
+		double blue = Noise.valueCoherentNoise3D(node.getWorldPosition().x, node.getWorldPosition().y, 0, 3412, NoiseQuality.BEST) / 2 + 0.5;
+		GL11.glColor3d(red, green, blue);
+		glBegin(GL11.GL_TRIANGLE_FAN);
+		{
+			
+			PolygonSimple transformedPolygon = PolygonTransformer.transformPolygon(node.getPolygon(), TEMP);
+			
+			//glVertex2d(node.getWorldPosition().x, node.getWorldPosition().y);
+			renderPolygon(transformedPolygon);
+			//glVertex2d(transformedPolygon.getXPoints()[0], transformedPolygon.getYPoints()[0]);
+		}
+		glEnd();
 	}
 
 	private static void renderPolygon(PolygonSimple polygon) {
-		for (int i = 0; i < polygon.getNumPoints(); i++) {
+		if(polygon.getNumPoints() == 0)
+			return;
+
+		for(int i = 0; i < polygon.getNumPoints(); i++) {
 			double x = polygon.getXPoints()[i];
 			double y = polygon.getYPoints()[i];
 			glVertex2d(x, y);
@@ -71,40 +84,53 @@ public class VoronoiRenderer {
 
 	public void render(Matrix3d viewMatrix, PolygonSimple clipPolygon) {
 		Queue<VoronoiNode> nodes = new LinkedList<VoronoiNode>();
-		root.setClipPolygon(clipPolygon);
 
 		nodes.add(root);
-		while (!nodes.isEmpty()) {
+		while(!nodes.isEmpty()) {
 			VoronoiNode node = nodes.remove();
 			renderNodePolygon(node, viewMatrix);
-			for (VoronoiNode child : node.getChildren())
+			for(VoronoiNode child : node.getChildren())
 				nodes.add(child);
 		}
 
 		nodes.clear();
 		nodes.add(root);
-		while (!nodes.isEmpty()) {
+		while(!nodes.isEmpty()) {
 			VoronoiNode node = nodes.remove();
-			
-			GL11.glColor3d(0.0, 0, 0);
-			glLineWidth(BASE_LINE_WIDTH / (node.getDepth() + 1));
-			TEMP.set(viewMatrix);
-			if (node.getParent() != null)
-				TEMP.mul(node.getParent().getLocalToWorldTransform());
-			glBegin(GL11.GL_LINE_LOOP);{
-				renderPolygon(PolygonTransformer.transformPolygon(node.getPolygon(), TEMP));
-			}glEnd();
-			for (VoronoiNode child : node.getChildren())
+
+			if(node.getDepth() > 0) {
+				if(node.getPolygon() == null)
+					continue;
+				GL11.glColor3d(0.0, 0, 0);
+				glLineWidth(BASE_LINE_WIDTH / (node.getDepth() + 1));
+				
+				TEMP.set(viewMatrix);
+				if(node.getParent() != null)
+					TEMP.mul(node.getParent().getLocalToWorldTransform());
+				glBegin(GL11.GL_LINE_LOOP);
+				{
+					renderPolygon(PolygonTransformer.transformPolygon(node.getPolygon(), TEMP));
+				}
+				glEnd();
+			}
+			for(VoronoiNode child : node.getChildren())
+				nodes.add(child);
+		}
+
+		nodes.clear();
+		nodes.add(root);
+		while(!nodes.isEmpty()) {
+			VoronoiNode node = nodes.remove();
+			renderNodePoint(node, viewMatrix);
+			for(VoronoiNode child : node.getChildren())
 				nodes.add(child);
 		}
 		
-		nodes.clear();
-		nodes.add(root);
-		while (!nodes.isEmpty()) {
-			VoronoiNode node = nodes.remove();
-			renderNodePoint(node, viewMatrix);
-			for (VoronoiNode child : node.getChildren())
-				nodes.add(child);
-		}
+		
+		GL11.glColor3d(0, 1, 0);
+		TEMP.set(viewMatrix);
+		glBegin(GL11.GL_LINE_LOOP);
+		renderPolygon(PolygonTransformer.transformPolygon(clipPolygon, TEMP));
+		glEnd();
 	}
 }
