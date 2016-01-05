@@ -2,9 +2,7 @@ package com.fabianachammer.procgenf.main.impl;
 
 import java.util.Collection;
 import java.util.HashMap;
-import java.util.HashSet;
 import java.util.Map;
-import java.util.Set;
 
 import org.joml.Matrix3d;
 import org.joml.Vector2d;
@@ -27,6 +25,7 @@ public class VoronoiNode {
 	private Matrix3d localToParentTransform = new Matrix3d();
 	private Matrix3d parentToLocalTransform = new Matrix3d();
 	private Matrix3d localToWorldTransform = new Matrix3d();
+	private boolean isSubdiagramDirty = true;
 
 	public VoronoiNode() {
 		this(new Vector2d());
@@ -72,6 +71,9 @@ public class VoronoiNode {
 
 	// Refresh must go top-down
 	public void recomputeSubDiagram() {
+		if(!isSubdiagramDirty)
+			return;
+		
 		PolygonSimple clipPolygon = getClipPolygon();
 
 		if(clipPolygon == null)
@@ -85,15 +87,20 @@ public class VoronoiNode {
 
 		for(VoronoiNode child : children.values())
 			child.recomputeSubDiagram();
+		
+		isSubdiagramDirty = false;
 	}
 
 	public void clearChildren() {
 		children.clear();
+		isSubdiagramDirty = true;
 	}
 
 	public VoronoiNode setClipPolygon(PolygonSimple clipPolygon) {
-		this.clipPolygon = clipPolygon;
-		// recomputeSubDiagram();
+		if(this.clipPolygon != clipPolygon) {
+			this.clipPolygon = clipPolygon;
+			isSubdiagramDirty = true;
+		}
 		return this;
 	}
 
@@ -110,7 +117,7 @@ public class VoronoiNode {
 		if(child != null && children.putIfAbsent(child.getLocalPosition(), child) == null) {
 			child.parent = this;
 			subSites.add(child.site);
-			// recomputeSubDiagram();
+			isSubdiagramDirty = true;
 		}
 
 		return this;
@@ -120,7 +127,7 @@ public class VoronoiNode {
 		if(child != null && children.remove(child.getLocalPosition()) != null) {
 			child.parent = null;
 			reconstructSubSites();
-			// recomputeSubDiagram();
+			isSubdiagramDirty = true;
 		}
 
 		return this;
@@ -184,7 +191,7 @@ public class VoronoiNode {
 			refreshTransformMatrices(localPosition);
 
 			if(this.parent != null) {
-				// parent.recomputeSubDiagram();
+				parent.isSubdiagramDirty = true;
 			}
 		}
 		return this;
