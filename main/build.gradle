@@ -31,8 +31,10 @@ dependencies {
   ext.flowNoiseVersion = '1.0.0'
   ext.apacheCommonsLangVersion = '3.4'
   
-  implCompile sourceSets.api.output
+  apiCompile project(':power-voronoi-diagram')
+  
   implCompile project(':power-voronoi-diagram')
+  implCompile sourceSets.api.output
   implCompile "org.lwjgl:lwjgl:$lwjglVersion"
   implCompile "org.lwjgl:lwjgl-platform:$lwjglVersion:natives-windows"
   implCompile "org.lwjgl:lwjgl-platform:$lwjglVersion:natives-linux"
