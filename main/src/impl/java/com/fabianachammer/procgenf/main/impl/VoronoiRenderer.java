@@ -23,11 +23,6 @@ public class VoronoiRenderer {
 
 	private static final int BASE_LINE_WIDTH = 20;
 	private static final int BASE_SITE_SIZE = 30;
-	private VoronoiNode root;
-
-	public VoronoiRenderer(VoronoiNode root) {
-		this.root = root;
-	}
 
 	private static void renderNodePoint(VoronoiNode node, Matrix3d viewMatrix) {
 		if(node.getParent() == null)
@@ -82,7 +77,7 @@ public class VoronoiRenderer {
 		}
 	}
 
-	public void render(Matrix3d viewMatrix, PolygonSimple clipPolygon) {
+	public void render(VoronoiNode root, Matrix3d viewMatrix, PolygonSimple clipPolygon) {
 		Queue<VoronoiNode> nodes = new LinkedList<VoronoiNode>();
 
 		nodes.add(root);

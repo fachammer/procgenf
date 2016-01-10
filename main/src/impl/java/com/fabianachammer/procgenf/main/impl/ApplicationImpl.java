@@ -1,5 +1,11 @@
 package com.fabianachammer.procgenf.main.impl;
 
+import com.fabianachammer.procgenf.generation.Chunk;
+import com.fabianachammer.procgenf.generation.GenerationEngine;
+import com.fabianachammer.procgenf.generation.impl.ChunkImpl;
+import com.fabianachammer.procgenf.generation.impl.GenerationEngineImpl;
+import com.fabianachammer.procgenf.generation.impl.RootChunk;
+import com.fabianachammer.procgenf.generation.impl.RootVoronoiChunkGenerator;
 import com.fabianachammer.procgenf.main.Application;
 
 import kn.uni.voronoitreemap.j2d.PolygonSimple;
@@ -11,25 +17,25 @@ import static org.lwjgl.glfw.GLFW.*;
 import static org.lwjgl.opengl.GL11.*;
 import static org.lwjgl.system.MemoryUtil.*;
 
-import java.util.Arrays;
 import java.util.Random;
 
 import org.joml.Matrix3d;
 import org.joml.Vector2d;
-import org.joml.Vector3d;
 
 public class ApplicationImpl implements Application {
 
 	private GLFWErrorCallback errorCallback;
 	private GLFWKeyCallback keyCallback;
 	private long window;
-	private VoronoiNode root;
-	private VoronoiRenderer voronoiRenderer;
-	private VoronoiGenerator voronoiGenerator;
+	
 	private boolean[] keyPressed = new boolean[512];
 	private boolean[] previousKeyPressed = new boolean[512];
 	private static final int WIDTH = 700;
 	private static final int HEIGHT = 700;
+	
+	private RootChunk rootChunkFeature;
+	private VoronoiRenderer voronoiRenderer;
+	private GenerationEngine generationEngine;
 
 	public void run(String[] args) {
 		System.out.println("Hello LWJGL " + Version.getVersion() + "!");
@@ -81,9 +87,11 @@ public class ApplicationImpl implements Application {
 
 		glfwShowWindow(window);
 
-		root = node(0, 0);
-		voronoiRenderer = new VoronoiRenderer(root);
-		voronoiGenerator = new VoronoiGenerator(root);
+		rootChunkFeature = new RootChunk(null, node(0, 0), 0, RootChunk.GenerationType.Noise, 100, 1);
+		Chunk rootChunk = new ChunkImpl().addFeature(rootChunkFeature);
+		
+		generationEngine = new GenerationEngineImpl(rootChunk, new RootVoronoiChunkGenerator(rootChunkFeature));
+		voronoiRenderer = new VoronoiRenderer();
 	}
 
 	private static VoronoiNode node(double x, double y, PolygonSimple clipPolygon, VoronoiNode... children) {
@@ -110,9 +118,7 @@ public class ApplicationImpl implements Application {
 	private PolygonSimple visibilityPolygon = new PolygonSimple(
 			new double[] {1, 1, -1, -1}, 
 			new double[] {1, -1, -1, 1});
-	private VoronoiGenerator.GenerationType currentGenerator = VoronoiGenerator.GenerationType.Noise;
 	private Random random = new Random();
-	private int seed = 0;
 	
 	private void loop() {
 		GL.createCapabilities();
@@ -133,23 +139,19 @@ public class ApplicationImpl implements Application {
 				fixedVisibility = !fixedVisibility;
 			
 			if(keyPressed[GLFW_KEY_R] && !previousKeyPressed[GLFW_KEY_R]) {
-				seed = random.nextInt();
-				root.clearChildren();
+				rootChunkFeature.setSeed(random.nextInt());
 			}
 			
 			if(keyPressed[GLFW_KEY_1] && !previousKeyPressed[GLFW_KEY_1]) {
-				currentGenerator = VoronoiGenerator.GenerationType.Noise;
-				root.clearChildren();
+				rootChunkFeature.setGenerationType(RootChunk.GenerationType.Noise);
 			}
 			
 			if(keyPressed[GLFW_KEY_2] && !previousKeyPressed[GLFW_KEY_2]) {
-				currentGenerator = VoronoiGenerator.GenerationType.Square;
-				root.clearChildren();
+				rootChunkFeature.setGenerationType(RootChunk.GenerationType.Square);
 			}
 			
 			if(keyPressed[GLFW_KEY_3] && !previousKeyPressed[GLFW_KEY_3]) {
-				currentGenerator = VoronoiGenerator.GenerationType.Hexagon;
-				root.clearChildren();
+				rootChunkFeature.setGenerationType(RootChunk.GenerationType.Hexagon);
 			}
 			
 			System.arraycopy(keyPressed, 0, previousKeyPressed, 0, keyPressed.length);
@@ -176,12 +178,10 @@ public class ApplicationImpl implements Application {
 				visibilityPolygon.scale(1 / zoomLevel);
 			visibilityPolygon.translate(cameraPosition.x, cameraPosition.y);
 			
-			PolygonSimple clipPolygon = voronoiGenerator.generate(visibilityPolygon, currentGenerator, seed);
-			root.setClipPolygon(clipPolygon);
-			root.recomputeSubDiagram();
+			generationEngine.run(visibilityPolygon);
 			
 			glClear(GL_COLOR_BUFFER_BIT | GL_DEPTH_BUFFER_BIT);
-			voronoiRenderer.render(viewMatrix, visibilityPolygon);
+			voronoiRenderer.render(rootChunkFeature.getRootNode(), viewMatrix, visibilityPolygon);
 
 			glfwSwapBuffers(window);			
 			

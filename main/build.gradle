@@ -29,6 +29,7 @@ dependencies {
   ext.lwjglVersion = '3.0.0b'
   ext.jomlVersion = '1.6.6'
   ext.flowNoiseVersion = '1.0.0'
+  ext.apacheCommonsLangVersion = '3.4'
   
   implCompile sourceSets.api.output
   implCompile project(':power-voronoi-diagram')
@@ -38,6 +39,7 @@ dependencies {
   implCompile "org.lwjgl:lwjgl-platform:$lwjglVersion:natives-osx"
   implCompile "org.joml:joml:$jomlVersion"
   implCompile "com.flowpowered:flow-noise:$flowNoiseVersion"
+  implCompile "org.apache.commons:commons-lang3:$apacheCommonsLangVersion"
 
   testCompile 'junit:junit:4.9'
   testCompile sourceSets.api.output

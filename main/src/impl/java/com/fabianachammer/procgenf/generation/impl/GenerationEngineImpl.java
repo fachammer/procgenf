@@ -1,101 +1,134 @@
 package com.fabianachammer.procgenf.generation.impl;
 
-import java.util.HashMap;
+import java.util.ArrayList;
+import java.util.Collections;
+import java.util.HashSet;
 import java.util.LinkedList;
-import java.util.Map;
+import java.util.List;
 import java.util.Queue;
 import java.util.Set;
 
 import com.fabianachammer.procgenf.generation.Chunk;
 import com.fabianachammer.procgenf.generation.ChunkGenerator;
 import com.fabianachammer.procgenf.generation.GenerationEngine;
+import com.fabianachammer.procgenf.generation.RootChunkGenerator;
+
+import kn.uni.voronoitreemap.j2d.PolygonSimple;
 
 public class GenerationEngineImpl implements GenerationEngine {
 
 	private Queue<Chunk> generationQueue;
 	private Queue<Chunk> degenerationQueue;
-	private Map<Class<? extends Chunk>, ChunkGenerator> chunkGenerators;
+	private List<ChunkGenerator> chunkGenerators;
+	private Chunk rootChunk;
+	private Set<Chunk> generatedRootChunks;
+	private RootChunkGenerator rootChunkGenerator;
 	
-	public GenerationEngineImpl() {
+	public GenerationEngineImpl(Chunk rootChunk, RootChunkGenerator rootChunkGenerator) {
+		this.rootChunk = rootChunk;
+		this.rootChunkGenerator = rootChunkGenerator;
 		generationQueue = new LinkedList<>();
 		degenerationQueue = new LinkedList<>();
-		chunkGenerators = new HashMap<>();
+		chunkGenerators = new ArrayList<>();
+		generatedRootChunks = new HashSet<>();	
 	}
 	
-	private void throwIfNoGeneratorDefinedForChunk(Chunk chunk){
-		if(!chunkGenerators.containsKey(chunk.getClass()))
-			throw new IllegalArgumentException("no generator found for chunk class '" + chunk.getClass().getName() + "'. Make sure you set up the generators using the setGeneratorForChunk method");
-	}
-	
-	@Override
-	public GenerationEngine enqueueChunkForGeneration(Chunk chunk) {
-		throwIfNoGeneratorDefinedForChunk(chunk);
+	private GenerationEngine enqueueChunkForGeneration(Chunk chunk) {
+		if(chunk == null)
+			throwNull("chunk must not be null");
+		
 		generationQueue.add(chunk);
 		return this;
 	}
+	
+	@Override
+	public GenerationEngine addGenerator(ChunkGenerator generator) {
+		if(generator == null)
+			throwNull("generator must not be null");
+		
+		chunkGenerators.add(generator);
+		return this;
+	}
+	
+	private static void throwNull(String message){
+		throw new IllegalArgumentException(message);
+	}
+	
+	@Override
+	public GenerationEngine run(PolygonSimple visibilityRegion) {
+		setupGenerationQueues(visibilityRegion);
+		
+		while(!degenerationQueue.isEmpty())
+			degenerateChunk(degenerationQueue.remove());
+		
+		while(!generationQueue.isEmpty())
+			generateChunk(generationQueue.remove());
+		
+		return this;
+	}
 
-	@Override
-	public GenerationEngine enqueueChunkForDegeneration(Chunk chunk) {
-		throwIfNoGeneratorDefinedForChunk(chunk);
-		degenerationQueue.add(chunk);
-		return this;
-	}
-	
-	@Override
-	public GenerationEngine setGeneratorForChunk(ChunkGenerator generator, Class<? extends Chunk> chunkClass) {
-		throwIfNull(generator, "generator must not be null");
-		throwIfNull(chunkClass, "chunkClass must not be null");
-		chunkGenerators.put(chunkClass, generator);
-		return this;
-	}
-	
-	private static void throwIfNull(Object object, String message){
-		if(object == null)
-			throw new IllegalArgumentException(message);
-	}
-	
-	@Override
-	public GenerationEngine run() {
-		while(!degenerationQueue.isEmpty()){
-			Chunk chunk = degenerationQueue.remove();
-			ChunkGenerator generator = getGeneratorForChunk(chunk);
-			degenerateChunk(generator, chunk);
-		}
+	private void setupGenerationQueues(PolygonSimple visibilityRegion) {
+		Set<Chunk> currentRootChunks = rootChunkGenerator.generateChunksFromVisibilityRegion(visibilityRegion);
 		
-		while(!generationQueue.isEmpty()){
-			Chunk chunk = generationQueue.remove();
-			ChunkGenerator generator = chunkGenerators.get(chunk.getClass());
-			generateChunk(generator, chunk);
-		}
+		currentRootChunks.forEach(chunk -> chunk.setParent(rootChunk));
 		
-		return this;
+		degenerateOldChunks(currentRootChunks);
+		generateNewChunks(currentRootChunks);
+		
+		generatedRootChunks = currentRootChunks;
+	}
+
+	private void generateNewChunks(Set<Chunk> currentRootChunks) {
+		Set<Chunk> chunksToBeGenerated = new HashSet<>();
+		chunksToBeGenerated.addAll(currentRootChunks);
+		chunksToBeGenerated.removeAll(generatedRootChunks);
+		chunksToBeGenerated.forEach(this::enqueueChunkForGeneration);
+	}
+
+	private void degenerateOldChunks(Set<Chunk> currentRootChunks) {
+		Set<Chunk> chunksToBeDegenerated = new HashSet<>();
+		chunksToBeDegenerated.addAll(generatedRootChunks);
+		chunksToBeDegenerated.removeAll(currentRootChunks);
+		rootChunkGenerator.degenerateChunks(chunksToBeDegenerated);
 	}
 	
-	private ChunkGenerator getGeneratorForChunk(Chunk chunk) {
-		return chunkGenerators.get(chunk.getClass());
+	private List<ChunkGenerator> getGeneratorsForChunk(Chunk chunk) {
+		List<ChunkGenerator> generators = new ArrayList<>(chunkGenerators);
+		generators.removeIf(g -> !g.willGenerateChunk(chunk));
+		return generators;
 	}
 	
-	private void degenerateChunk(ChunkGenerator generator, Chunk chunk) {
+	private void degenerateChunk(Chunk chunk) {
+		List<ChunkGenerator> generators = getGeneratorsForChunk(chunk);
 		if(chunk.getChildren() != null) {
 			// degenerate children first so that they can depend on their parents while degenerating
 			chunk.getChildren().forEach(childChunk -> {
-				ChunkGenerator childGenerator = getGeneratorForChunk(childChunk);
-				degenerateChunk(childGenerator, childChunk);
+				degenerateChunk(childChunk);
 			});
 		}
 		
-		generator.degenerateChunk(chunk);
+		Collections.reverse(generators);
+		generators.forEach(generator -> generator.degenerateChunk(chunk));
 	}
 	
-	private void generateChunk(ChunkGenerator generator, Chunk chunk) {
-		Set<Chunk> subChunks = generator.generateChunk(chunk);
-		if(subChunks == null)
-			return;
+	private void generateChunk(Chunk chunk) {
+		List<ChunkGenerator> generators = getGeneratorsForChunk(chunk);
 		
-		subChunks.forEach(subChunk -> {
-			subChunk.setParent(chunk);
-			// enqueue chunk so that it can depend on its sibling chunk when generating sub chunks
-			enqueueChunkForGeneration(chunk);
+		generators.forEach(generator -> {
+			Set<Chunk> generatorSubChunks = generator.generateChunk(chunk);
+			if(generatorSubChunks != null){
+				generatorSubChunks.forEach(subChunk -> {
+					chunk.addChild(subChunk);
+					subChunk.setParent(chunk);
+					// enqueue chunk so that it can depend on its sibling chunks when generating sub chunks
+					enqueueChunkForGeneration(chunk);
+				});
+			}
 		});
+	}
+	
+	@Override
+	public Chunk getRootChunk() {
+		return rootChunk;
 	}
 }

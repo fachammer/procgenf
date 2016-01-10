@@ -4,6 +4,8 @@ import java.util.Collection;
 import java.util.HashMap;
 import java.util.Map;
 
+import org.apache.commons.lang3.builder.EqualsBuilder;
+import org.apache.commons.lang3.builder.HashCodeBuilder;
 import org.joml.Matrix3d;
 import org.joml.Vector2d;
 import org.joml.Vector3d;
@@ -207,5 +209,35 @@ public class VoronoiNode {
 
 	public int getDepth() {
 		return parent == null ? 0 : parent.getDepth() + 1;
+	}
+	
+	@Override
+	public boolean equals(Object obj) {
+		if(!(obj instanceof VoronoiNode))
+			return false;
+		
+		if(this == obj)
+			return true;
+		
+		VoronoiNode rhs = (VoronoiNode) obj;
+		return new EqualsBuilder()
+				.append(parent, rhs.parent)
+				.append(children, rhs.children)
+				.append(site, rhs.site)
+				.append(subDiagram, rhs.subDiagram)
+				.append(localPosition, rhs.localPosition)
+				.append(clipPolygon, rhs.clipPolygon)
+				.append(localToParentTransform, rhs.localToParentTransform)
+				.append(parentToLocalTransform, rhs.parentToLocalTransform)
+				.append(localToWorldTransform, rhs.localToWorldTransform)
+				.append(isSubdiagramDirty, rhs.isSubdiagramDirty)
+				.isEquals();
+	}
+	
+	@Override
+	public int hashCode() {
+		return new HashCodeBuilder(17, 31)
+				.append(getWorldPosition())
+				.toHashCode();
 	}
 }
