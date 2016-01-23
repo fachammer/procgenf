@@ -1,10 +1,10 @@
 package com.fabianachammer.procgenf.generation.impl;
 
-import com.fabianachammer.procgenf.generation.Chunk;
-import com.fabianachammer.procgenf.generation.ChunkFeature;
+import com.fabianachammer.procgenf.generation.ChunkEntity;
+import com.fabianachammer.procgenf.generation.ChunkComponent;
 import com.fabianachammer.procgenf.main.impl.VoronoiNode;
 
-public class RootChunk implements ChunkFeature {
+public class RootChunkComponent implements ChunkComponent {
 	
 	public enum GenerationType {
 		Noise,
@@ -15,11 +15,11 @@ public class RootChunk implements ChunkFeature {
 	private VoronoiNode rootNode;
 	private int seed;
 	private GenerationType generationType;
-	private Chunk chunk;
+	private ChunkEntity chunk;
 	private float gridSize;
 	private int visibilityOffset;
 	
-	public RootChunk(Chunk chunk, VoronoiNode rootNode, int seed, GenerationType generationType, float gridSize, int visibilityOffset) {
+	public RootChunkComponent(ChunkEntity chunk, VoronoiNode rootNode, int seed, GenerationType generationType, float gridSize, int visibilityOffset) {
 		this.chunk = chunk;
 		this.rootNode = rootNode;
 		this.seed = seed;
@@ -32,7 +32,7 @@ public class RootChunk implements ChunkFeature {
 		return rootNode;
 	}
 	
-	public RootChunk setRootNode(VoronoiNode rootNode){
+	public RootChunkComponent setRootNode(VoronoiNode rootNode){
 		this.rootNode = rootNode;
 		return this;
 	}
@@ -41,7 +41,7 @@ public class RootChunk implements ChunkFeature {
 		return seed;
 	}
 	
-	public RootChunk setSeed(int seed){
+	public RootChunkComponent setSeed(int seed){
 		this.seed = seed;
 		return this;
 	}
@@ -50,7 +50,7 @@ public class RootChunk implements ChunkFeature {
 		return generationType;
 	}
 	
-	public RootChunk setGenerationType(GenerationType generationType){
+	public RootChunkComponent setGenerationType(GenerationType generationType){
 		this.generationType = generationType;
 		return this;
 	}
@@ -64,7 +64,7 @@ public class RootChunk implements ChunkFeature {
 	}
 
 	@Override
-	public Chunk getContainerChunk() {
+	public ChunkEntity getContainerChunk() {
 		return chunk;
 	}
 }

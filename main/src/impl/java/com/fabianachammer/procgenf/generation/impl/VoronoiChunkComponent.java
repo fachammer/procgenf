@@ -3,21 +3,21 @@ package com.fabianachammer.procgenf.generation.impl;
 import org.apache.commons.lang3.builder.EqualsBuilder;
 import org.apache.commons.lang3.builder.HashCodeBuilder;
 
-import com.fabianachammer.procgenf.generation.Chunk;
-import com.fabianachammer.procgenf.generation.ChunkFeature;
+import com.fabianachammer.procgenf.generation.ChunkEntity;
+import com.fabianachammer.procgenf.generation.ChunkComponent;
 import com.fabianachammer.procgenf.main.impl.VoronoiNode;
 
-public class VoronoiChunk implements ChunkFeature {
+public class VoronoiChunkComponent implements ChunkComponent {
 
 	private VoronoiNode node;
-	private Chunk chunk;
+	private ChunkEntity chunk;
 	
-	public VoronoiChunk(Chunk chunk, VoronoiNode node){
+	public VoronoiChunkComponent(ChunkEntity chunk, VoronoiNode node){
 		this.chunk = chunk;
 		setNode(node);
 	}
 	
-	public VoronoiChunk setNode(VoronoiNode node){
+	public VoronoiChunkComponent setNode(VoronoiNode node){
 		this.node = node;
 		return this;
 	}
@@ -27,19 +27,19 @@ public class VoronoiChunk implements ChunkFeature {
 	}
 
 	@Override
-	public Chunk getContainerChunk() {
+	public ChunkEntity getContainerChunk() {
 		return chunk;
 	}
 	
 	@Override
 	public boolean equals(Object obj) {
-		if(!(obj instanceof VoronoiChunk))
+		if(!(obj instanceof VoronoiChunkComponent))
 			return false;
 		
 		if(this == obj)
 			return true;
 		
-		VoronoiChunk rhs = (VoronoiChunk) obj;
+		VoronoiChunkComponent rhs = (VoronoiChunkComponent) obj;
 		return new EqualsBuilder()
 				.append(node, rhs.node)
 				.isEquals();

@@ -14,9 +14,9 @@ public interface GenerationEngine {
 	 *            generator to be added
 	 * @return this generation engine
 	 */
-	GenerationEngine addGenerator(ChunkGenerator generator);
+	GenerationEngine addGenerator(ChunkGeneratorSystem generator);
 
 	GenerationEngine run(PolygonSimple visibilityRegion);
 
-	Chunk getRootChunk();
+	ChunkEntity getRootChunk();
 }

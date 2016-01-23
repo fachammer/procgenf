@@ -2,13 +2,13 @@ package com.fabianachammer.procgenf.generation.impl;
 
 import java.util.Optional;
 
-import com.fabianachammer.procgenf.generation.Chunk;
-import com.fabianachammer.procgenf.generation.ChunkFeature;
+import com.fabianachammer.procgenf.generation.ChunkEntity;
+import com.fabianachammer.procgenf.generation.ChunkComponent;
 
 public class Utility {
 
 	@SuppressWarnings("unchecked")
-	public static <T extends ChunkFeature> Optional<T> getChunkFeature(Chunk chunk, Class<T> featureClass) {
-		return chunk.getFeatures().stream().filter(f -> featureClass.isAssignableFrom(f.getClass())).map(f -> (T) f).findFirst();
+	public static <T extends ChunkComponent> Optional<T> getChunkComponent(ChunkEntity chunk, Class<T> componentClass) {
+		return chunk.getComponents().stream().filter(c -> componentClass.isAssignableFrom(c.getClass())).map(f -> (T) f).findFirst();
 	}
 }

@@ -8,8 +8,8 @@ import java.util.List;
 import java.util.Queue;
 import java.util.Set;
 
-import com.fabianachammer.procgenf.generation.Chunk;
-import com.fabianachammer.procgenf.generation.ChunkGenerator;
+import com.fabianachammer.procgenf.generation.ChunkEntity;
+import com.fabianachammer.procgenf.generation.ChunkGeneratorSystem;
 import com.fabianachammer.procgenf.generation.GenerationEngine;
 import com.fabianachammer.procgenf.generation.RootChunkGenerator;
 
@@ -17,14 +17,14 @@ import kn.uni.voronoitreemap.j2d.PolygonSimple;
 
 public class GenerationEngineImpl implements GenerationEngine {
 
-	private Queue<Chunk> generationQueue;
-	private Queue<Chunk> degenerationQueue;
-	private List<ChunkGenerator> chunkGenerators;
-	private Chunk rootChunk;
-	private Set<Chunk> generatedRootChunks;
+	private Queue<ChunkEntity> generationQueue;
+	private Queue<ChunkEntity> degenerationQueue;
+	private List<ChunkGeneratorSystem> chunkGenerators;
+	private ChunkEntity rootChunk;
+	private Set<ChunkEntity> generatedRootChunks;
 	private RootChunkGenerator rootChunkGenerator;
 	
-	public GenerationEngineImpl(Chunk rootChunk, RootChunkGenerator rootChunkGenerator) {
+	public GenerationEngineImpl(ChunkEntity rootChunk, RootChunkGenerator rootChunkGenerator) {
 		this.rootChunk = rootChunk;
 		this.rootChunkGenerator = rootChunkGenerator;
 		generationQueue = new LinkedList<>();
@@ -33,7 +33,7 @@ public class GenerationEngineImpl implements GenerationEngine {
 		generatedRootChunks = new HashSet<>();	
 	}
 	
-	private GenerationEngine enqueueChunkForGeneration(Chunk chunk) {
+	private GenerationEngine enqueueChunkForGeneration(ChunkEntity chunk) {
 		if(chunk == null)
 			throwNull("chunk must not be null");
 		
@@ -42,7 +42,7 @@ public class GenerationEngineImpl implements GenerationEngine {
 	}
 	
 	@Override
-	public GenerationEngine addGenerator(ChunkGenerator generator) {
+	public GenerationEngine addGenerator(ChunkGeneratorSystem generator) {
 		if(generator == null)
 			throwNull("generator must not be null");
 		
@@ -68,7 +68,7 @@ public class GenerationEngineImpl implements GenerationEngine {
 	}
 
 	private void setupGenerationQueues(PolygonSimple visibilityRegion) {
-		Set<Chunk> currentRootChunks = rootChunkGenerator.generateChunksFromVisibilityRegion(visibilityRegion);
+		Set<ChunkEntity> currentRootChunks = rootChunkGenerator.generateChunksFromVisibilityRegion(visibilityRegion);
 		
 		currentRootChunks.forEach(chunk -> chunk.setParent(rootChunk));
 		
@@ -78,28 +78,28 @@ public class GenerationEngineImpl implements GenerationEngine {
 		generatedRootChunks = currentRootChunks;
 	}
 
-	private void generateNewChunks(Set<Chunk> currentRootChunks) {
-		Set<Chunk> chunksToBeGenerated = new HashSet<>();
+	private void generateNewChunks(Set<ChunkEntity> currentRootChunks) {
+		Set<ChunkEntity> chunksToBeGenerated = new HashSet<>();
 		chunksToBeGenerated.addAll(currentRootChunks);
 		chunksToBeGenerated.removeAll(generatedRootChunks);
 		chunksToBeGenerated.forEach(this::enqueueChunkForGeneration);
 	}
 
-	private void degenerateOldChunks(Set<Chunk> currentRootChunks) {
-		Set<Chunk> chunksToBeDegenerated = new HashSet<>();
+	private void degenerateOldChunks(Set<ChunkEntity> currentRootChunks) {
+		Set<ChunkEntity> chunksToBeDegenerated = new HashSet<>();
 		chunksToBeDegenerated.addAll(generatedRootChunks);
 		chunksToBeDegenerated.removeAll(currentRootChunks);
 		rootChunkGenerator.degenerateChunks(chunksToBeDegenerated);
 	}
 	
-	private List<ChunkGenerator> getGeneratorsForChunk(Chunk chunk) {
-		List<ChunkGenerator> generators = new ArrayList<>(chunkGenerators);
+	private List<ChunkGeneratorSystem> getGeneratorsForChunk(ChunkEntity chunk) {
+		List<ChunkGeneratorSystem> generators = new ArrayList<>(chunkGenerators);
 		generators.removeIf(g -> !g.willGenerateChunk(chunk));
 		return generators;
 	}
 	
-	private void degenerateChunk(Chunk chunk) {
-		List<ChunkGenerator> generators = getGeneratorsForChunk(chunk);
+	private void degenerateChunk(ChunkEntity chunk) {
+		List<ChunkGeneratorSystem> generators = getGeneratorsForChunk(chunk);
 		if(chunk.getChildren() != null) {
 			// degenerate children first so that they can depend on their parents while degenerating
 			chunk.getChildren().forEach(childChunk -> {
@@ -111,11 +111,11 @@ public class GenerationEngineImpl implements GenerationEngine {
 		generators.forEach(generator -> generator.degenerateChunk(chunk));
 	}
 	
-	private void generateChunk(Chunk chunk) {
-		List<ChunkGenerator> generators = getGeneratorsForChunk(chunk);
+	private void generateChunk(ChunkEntity chunk) {
+		List<ChunkGeneratorSystem> generators = getGeneratorsForChunk(chunk);
 		
 		generators.forEach(generator -> {
-			Set<Chunk> generatorSubChunks = generator.generateChunk(chunk);
+			Set<ChunkEntity> generatorSubChunks = generator.generateChunk(chunk);
 			if(generatorSubChunks != null){
 				generatorSubChunks.forEach(subChunk -> {
 					chunk.addChild(subChunk);
@@ -128,7 +128,7 @@ public class GenerationEngineImpl implements GenerationEngine {
 	}
 	
 	@Override
-	public Chunk getRootChunk() {
+	public ChunkEntity getRootChunk() {
 		return rootChunk;
 	}
 }

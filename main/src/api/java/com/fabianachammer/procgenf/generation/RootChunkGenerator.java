@@ -6,7 +6,7 @@ import kn.uni.voronoitreemap.j2d.PolygonSimple;
 
 public interface RootChunkGenerator {
 
-	Set<Chunk> generateChunksFromVisibilityRegion(PolygonSimple visibilityRegion);
+	Set<ChunkEntity> generateChunksFromVisibilityRegion(PolygonSimple visibilityRegion);
 	
-	void degenerateChunks(Set<Chunk> chunks);
+	void degenerateChunks(Set<ChunkEntity> chunks);
 }

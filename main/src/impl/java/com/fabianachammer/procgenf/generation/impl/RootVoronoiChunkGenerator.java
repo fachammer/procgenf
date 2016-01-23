@@ -8,24 +8,24 @@ import java.util.Set;
 
 import org.joml.Vector2d;
 
-import com.fabianachammer.procgenf.generation.Chunk;
+import com.fabianachammer.procgenf.generation.ChunkEntity;
 import com.fabianachammer.procgenf.generation.RootChunkGenerator;
-import com.fabianachammer.procgenf.generation.impl.RootChunk.GenerationType;
+import com.fabianachammer.procgenf.generation.impl.RootChunkComponent.GenerationType;
 import com.fabianachammer.procgenf.main.impl.VoronoiNode;
 import com.flowpowered.noise.Noise;
 import com.flowpowered.noise.NoiseQuality;
 import kn.uni.voronoitreemap.j2d.PolygonSimple;
-import static com.fabianachammer.procgenf.generation.impl.Utility.getChunkFeature;
+import static com.fabianachammer.procgenf.generation.impl.Utility.getChunkComponent;
 
 public class RootVoronoiChunkGenerator implements RootChunkGenerator {
-	private RootChunk root;
+	private RootChunkComponent root;
 
-	public RootVoronoiChunkGenerator(RootChunk root) {
+	public RootVoronoiChunkGenerator(RootChunkComponent root) {
 		this.root = root;
 	}
 
 	@Override
-	public Set<Chunk> generateChunksFromVisibilityRegion(PolygonSimple visibilityRegion) {
+	public Set<ChunkEntity> generateChunksFromVisibilityRegion(PolygonSimple visibilityRegion) {
 		float gridSize = root.getGridSize();
 		int visibilityOffset = root.getVisibilityOffset();
 		Rectangle2D bounds = visibilityRegion.getBounds2D();
@@ -40,7 +40,7 @@ public class RootVoronoiChunkGenerator implements RootChunkGenerator {
 		
 		Rectangle2D generationBounds = new Rectangle2D.Double(leftGridX * gridSize, bottomGridY * gridSize, numberOfXGrids * gridSize, numberOfYGrids * gridSize);
 		root.getRootNode().setClipPolygon(calculateClipPolygonForVisibleBounds(generationBounds));
-		Set<Chunk> subChunks = new HashSet<>();
+		Set<ChunkEntity> subChunks = new HashSet<>();
 		for(int x = leftGridX; x <= rightGridX; x++) {
 			for(int y = bottomGridY; y <= topGridY; y++) {
 				double xMin = x * gridSize;
@@ -48,9 +48,9 @@ public class RootVoronoiChunkGenerator implements RootChunkGenerator {
 				Vector2d generatedPoint = generatePointInBounds(new Rectangle2D.Double(xMin, yMin, gridSize, gridSize),
 						root.getGenerationType(), root.getSeed());
 				VoronoiNode node = new VoronoiNode(generatedPoint).setParent(root.getRootNode());
-				Chunk chunk = new ChunkImpl();
-				VoronoiChunk voronoiFeature = new VoronoiChunk(chunk, node);
-				chunk.addFeature(voronoiFeature);
+				ChunkEntity chunk = new ChunkEntityImpl();
+				VoronoiChunkComponent voronoiComponent = new VoronoiChunkComponent(chunk, node);
+				chunk.addComponent(voronoiComponent);
 				subChunks.add(chunk);
 			}
 		}
@@ -61,11 +61,11 @@ public class RootVoronoiChunkGenerator implements RootChunkGenerator {
 	}
 	
 	@Override
-	public void degenerateChunks(Set<Chunk> chunks) {
+	public void degenerateChunks(Set<ChunkEntity> chunks) {
 		chunks.forEach(chunk -> {
-			Optional<VoronoiChunk> voronoiFeature = getChunkFeature(chunk, VoronoiChunk.class);
-			if(voronoiFeature.isPresent())
-				voronoiFeature.get().getNode().setParent(null);
+			Optional<VoronoiChunkComponent> voronoiComponent = getChunkComponent(chunk, VoronoiChunkComponent.class);
+			if(voronoiComponent.isPresent())
+				voronoiComponent.get().getNode().setParent(null);
 		});
 	}
 	

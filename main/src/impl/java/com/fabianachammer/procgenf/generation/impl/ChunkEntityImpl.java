@@ -6,54 +6,54 @@ import java.util.Set;
 import org.apache.commons.lang3.builder.EqualsBuilder;
 import org.apache.commons.lang3.builder.HashCodeBuilder;
 
-import com.fabianachammer.procgenf.generation.Chunk;
-import com.fabianachammer.procgenf.generation.ChunkFeature;
+import com.fabianachammer.procgenf.generation.ChunkEntity;
+import com.fabianachammer.procgenf.generation.ChunkComponent;
 
-public class ChunkImpl implements Chunk {
+public class ChunkEntityImpl implements ChunkEntity {
 
-	private Chunk parent;
-	private Set<Chunk> children;
-	private Set<ChunkFeature> features;
+	private ChunkEntity parent;
+	private Set<ChunkEntity> children;
+	private Set<ChunkComponent> components;
 	
-	public ChunkImpl(){
+	public ChunkEntityImpl(){
 		children = new HashSet<>();
-		features = new HashSet<>();	
+		components = new HashSet<>();	
 	}
 	
 	@Override
-	public Chunk getParent() {
+	public ChunkEntity getParent() {
 		return parent;
 	}
 
 	@Override
-	public Chunk setParent(Chunk newParent) {
+	public ChunkEntity setParent(ChunkEntity newParent) {
 		this.parent = newParent;
 		return this;
 	}
 
 	@Override
-	public Set<Chunk> getSiblings() {
+	public Set<ChunkEntity> getSiblings() {
 		if(parent == null)
 			return null;		
 		
-		Set<Chunk> siblings = new HashSet<>(parent.getChildren());
+		Set<ChunkEntity> siblings = new HashSet<>(parent.getChildren());
 		siblings.remove(this);
 		return siblings;
 	}
 	
 	@Override
-	public Set<Chunk> getChildren() {
+	public Set<ChunkEntity> getChildren() {
 		return children;
 	}
 	
 	@Override
-	public Chunk addChild(Chunk child) {
+	public ChunkEntity addChild(ChunkEntity child) {
 		children.add(child);
 		return this;
 	}
 
 	@Override
-	public Chunk removeChild(Chunk child) {
+	public ChunkEntity removeChild(ChunkEntity child) {
 		children.remove(child);
 		return this;
 	}
@@ -64,35 +64,35 @@ public class ChunkImpl implements Chunk {
 	}
 
 	@Override
-	public Set<ChunkFeature> getFeatures() {
-		return features;
+	public Set<ChunkComponent> getComponents() {
+		return components;
 	}
 
 	@Override
-	public Chunk addFeature(ChunkFeature feature) {
-		features.add(feature);		
+	public ChunkEntity addComponent(ChunkComponent component) {
+		components.add(component);		
 		return this;
 	}
 
 	@Override
-	public Chunk removeFeature(ChunkFeature feature) {
-		features.remove(feature);
+	public ChunkEntity removeComponent(ChunkComponent component) {
+		components.remove(component);
 		return this;
 	}
 	
 	@Override
 	public boolean equals(Object obj) {
-		if(!(obj instanceof ChunkImpl))
+		if(!(obj instanceof ChunkEntityImpl))
 			return false;
 		
 		if(this == obj)
 			return true;
 		
-		ChunkImpl rhs = (ChunkImpl) obj;
+		ChunkEntityImpl rhs = (ChunkEntityImpl) obj;
 		return new EqualsBuilder()
 				//.append(parent, rhs.parent)
 				.append(children, rhs.children)
-				.append(features, rhs.features)
+				.append(components, rhs.components)
 				.isEquals();
 	}
 	
@@ -101,7 +101,7 @@ public class ChunkImpl implements Chunk {
 		return new HashCodeBuilder(17, 31)
 				//.append(parent)
 				.append(children)
-				.append(features)
+				.append(components)
 				.toHashCode();
 	}
 }

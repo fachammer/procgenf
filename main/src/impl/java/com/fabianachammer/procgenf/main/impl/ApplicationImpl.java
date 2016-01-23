@@ -1,10 +1,10 @@
 package com.fabianachammer.procgenf.main.impl;
 
-import com.fabianachammer.procgenf.generation.Chunk;
+import com.fabianachammer.procgenf.generation.ChunkEntity;
 import com.fabianachammer.procgenf.generation.GenerationEngine;
-import com.fabianachammer.procgenf.generation.impl.ChunkImpl;
+import com.fabianachammer.procgenf.generation.impl.ChunkEntityImpl;
 import com.fabianachammer.procgenf.generation.impl.GenerationEngineImpl;
-import com.fabianachammer.procgenf.generation.impl.RootChunk;
+import com.fabianachammer.procgenf.generation.impl.RootChunkComponent;
 import com.fabianachammer.procgenf.generation.impl.RootVoronoiChunkGenerator;
 import com.fabianachammer.procgenf.main.Application;
 
@@ -33,7 +33,7 @@ public class ApplicationImpl implements Application {
 	private static final int WIDTH = 700;
 	private static final int HEIGHT = 700;
 	
-	private RootChunk rootChunkFeature;
+	private RootChunkComponent rootChunkComponent;
 	private VoronoiRenderer voronoiRenderer;
 	private GenerationEngine generationEngine;
 
@@ -87,10 +87,10 @@ public class ApplicationImpl implements Application {
 
 		glfwShowWindow(window);
 
-		rootChunkFeature = new RootChunk(null, node(0, 0), 0, RootChunk.GenerationType.Noise, 100, 1);
-		Chunk rootChunk = new ChunkImpl().addFeature(rootChunkFeature);
+		rootChunkComponent = new RootChunkComponent(null, node(0, 0), 0, RootChunkComponent.GenerationType.Noise, 100, 1);
+		ChunkEntity rootChunk = new ChunkEntityImpl().addComponent(rootChunkComponent);
 		
-		generationEngine = new GenerationEngineImpl(rootChunk, new RootVoronoiChunkGenerator(rootChunkFeature));
+		generationEngine = new GenerationEngineImpl(rootChunk, new RootVoronoiChunkGenerator(rootChunkComponent));
 		voronoiRenderer = new VoronoiRenderer();
 	}
 
@@ -139,19 +139,19 @@ public class ApplicationImpl implements Application {
 				fixedVisibility = !fixedVisibility;
 			
 			if(keyPressed[GLFW_KEY_R] && !previousKeyPressed[GLFW_KEY_R]) {
-				rootChunkFeature.setSeed(random.nextInt());
+				rootChunkComponent.setSeed(random.nextInt());
 			}
 			
 			if(keyPressed[GLFW_KEY_1] && !previousKeyPressed[GLFW_KEY_1]) {
-				rootChunkFeature.setGenerationType(RootChunk.GenerationType.Noise);
+				rootChunkComponent.setGenerationType(RootChunkComponent.GenerationType.Noise);
 			}
 			
 			if(keyPressed[GLFW_KEY_2] && !previousKeyPressed[GLFW_KEY_2]) {
-				rootChunkFeature.setGenerationType(RootChunk.GenerationType.Square);
+				rootChunkComponent.setGenerationType(RootChunkComponent.GenerationType.Square);
 			}
 			
 			if(keyPressed[GLFW_KEY_3] && !previousKeyPressed[GLFW_KEY_3]) {
-				rootChunkFeature.setGenerationType(RootChunk.GenerationType.Hexagon);
+				rootChunkComponent.setGenerationType(RootChunkComponent.GenerationType.Hexagon);
 			}
 			
 			System.arraycopy(keyPressed, 0, previousKeyPressed, 0, keyPressed.length);
@@ -181,7 +181,7 @@ public class ApplicationImpl implements Application {
 			generationEngine.run(visibilityPolygon);
 			
 			glClear(GL_COLOR_BUFFER_BIT | GL_DEPTH_BUFFER_BIT);
-			voronoiRenderer.render(rootChunkFeature.getRootNode(), viewMatrix, visibilityPolygon);
+			voronoiRenderer.render(rootChunkComponent.getRootNode(), viewMatrix, visibilityPolygon);
 
 			glfwSwapBuffers(window);			
 			

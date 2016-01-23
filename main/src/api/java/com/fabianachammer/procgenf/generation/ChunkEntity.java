@@ -3,18 +3,18 @@ package com.fabianachammer.procgenf.generation;
 import java.util.Set;
 
 /**
- * Represents a part of the world to be generated. Chunk features can be added
+ * Represents a part of the world to be generated. Chunk components can be added
  * to extend the generation process for this chunk
  * 
  * @author fachammer
  *
  */
-public interface Chunk {
+public interface ChunkEntity {
 	
 	/**
 	 * @return The parent of the chunk or null, if it is the root element.
 	 */
-	Chunk getParent();
+	ChunkEntity getParent();
 
 	/**
 	 * Sets a new parent for this chunk.
@@ -23,18 +23,18 @@ public interface Chunk {
 	 *            New chunk parent
 	 * @return this chunk.
 	 */
-	Chunk setParent(Chunk newParent);
+	ChunkEntity setParent(ChunkEntity newParent);
 
 	/**
 	 * @return The siblings of this chunk or the empty set, if the chunk has no
 	 *         siblings.
 	 */
-	Set<Chunk> getSiblings();
+	Set<ChunkEntity> getSiblings();
 
 	/**
 	 * @return All children of this chunk.
 	 */
-	Set<Chunk> getChildren();
+	Set<ChunkEntity> getChildren();
 
 	/**
 	 * Adds the given child to the children of this chunk, if it wasn't added
@@ -44,7 +44,7 @@ public interface Chunk {
 	 *            child to be added
 	 * @return this chunk
 	 */
-	Chunk addChild(Chunk child);
+	ChunkEntity addChild(ChunkEntity child);
 
 	/**
 	 * Removes the given child from the children of this chunk, if it was added
@@ -54,7 +54,7 @@ public interface Chunk {
 	 *            child to be removed
 	 * @return this chunk
 	 */
-	Chunk removeChild(Chunk child);
+	ChunkEntity removeChild(ChunkEntity child);
 
 	/**
 	 * @return Number of ancestors for this chunk
@@ -62,25 +62,25 @@ public interface Chunk {
 	int getDepth();
 
 	/**
-	 * @return set of chunk features ordered by insertion order
+	 * @return set of chunk components ordered by insertion order
 	 */
-	Set<ChunkFeature> getFeatures();
+	Set<ChunkComponent> getComponents();
 
 	/**
-	 * Adds the given feature to this chunk, if it wasn't added before
+	 * Adds the given component to this chunk, if it wasn't added before
 	 * 
-	 * @param feature
-	 *            feature to be added
+	 * @param component
+	 *            component to be added
 	 * @return this chunk
 	 */
-	Chunk addFeature(ChunkFeature feature);
+	ChunkEntity addComponent(ChunkComponent component);
 
 	/**
-	 * Removes the given feature from this chunk, if it was added before
+	 * Removes the given component from this chunk, if it was added before
 	 * 
-	 * @param feature
-	 *            feature to be removed
+	 * @param coponent
+	 *            component to be removed
 	 * @return this chunk
 	 */
-	Chunk removeFeature(ChunkFeature feature);
+	ChunkEntity removeComponent(ChunkComponent coponent);
 }
