@@ -105,8 +105,8 @@ public class ApplicationImpl implements Application {
 		
 		generationEngine = new GenerationEngineImpl(rootChunk);
 		generationEngine
-			.addGenerator(new RootGenerationBoundsGenerator(100, 1))
-			.addGenerator(new NoiseVoronoiChunkGenerator(1));
+			.addGenerator(new RootGenerationBoundsGenerator(100, 3))
+			.addGenerator(new NoiseVoronoiChunkGenerator(2));
 		voronoiRenderer = new VoronoiRenderer();
 	}
 

@@ -96,9 +96,8 @@ public class GenerationEngineImpl implements GenerationEngine {
 		if(chunk.getChildren() != null) {
 			// degenerate children first so that they can depend on their
 			// parents while degenerating
-			chunk.getChildren().forEach(childChunk -> {
-				degenerateChunk(childChunk);
-			});
+			// copy set to avoid ConcurrentModification issues
+			new HashSet<>(chunk.getChildren()).forEach(this::degenerateChunk);
 		}
 
 		for(int i = degenerators.size() - 1; i >= 0; i--) {

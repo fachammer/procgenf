@@ -14,9 +14,6 @@ import org.joml.Matrix3d;
 import org.joml.Vector3d;
 import org.lwjgl.opengl.GL11;
 
-import com.flowpowered.noise.Noise;
-import com.flowpowered.noise.NoiseQuality;
-
 import kn.uni.voronoitreemap.j2d.PolygonSimple;
 
 public class VoronoiRenderer {
@@ -35,7 +32,7 @@ public class VoronoiRenderer {
 			TEMP.set(viewMatrix);
 			TEMP.mul(node.getLocalToWorldTransform());
 			Vector3d worldPosition = TEMP.transform(new Vector3d(0, 0, 1));
-			glVertex2d(worldPosition.x, worldPosition.y);
+			//glVertex2d(worldPosition.x, worldPosition.y);
 		}
 		glEnd();
 	}
@@ -50,18 +47,16 @@ public class VoronoiRenderer {
 		if(node.getParent() != null)
 			TEMP.mul(node.getParent().getLocalToWorldTransform());
 
-		double red = Noise.valueCoherentNoise3D(node.getWorldPosition().x, node.getWorldPosition().y, 0, 1234, NoiseQuality.BEST) / 2 + 0.5;
-		double green = Noise.valueCoherentNoise3D(node.getWorldPosition().x, node.getWorldPosition().y, 0, 4321, NoiseQuality.BEST) / 2 + 0.5;
-		double blue = Noise.valueCoherentNoise3D(node.getWorldPosition().x, node.getWorldPosition().y, 0, 3412, NoiseQuality.BEST) / 2 + 0.5;
+		double value = node.getDepth() / 2.0;
+		double red = 0.25 * value;
+		double green = 0.25 * value;
+		double blue = 0.25 * value;
 		GL11.glColor3d(red, green, blue);
 		glBegin(GL11.GL_TRIANGLE_FAN);
 		{
-			
 			PolygonSimple transformedPolygon = PolygonTransformer.transformPolygon(node.getPolygon(), TEMP);
 			
-			//glVertex2d(node.getWorldPosition().x, node.getWorldPosition().y);
 			renderPolygon(transformedPolygon);
-			//glVertex2d(transformedPolygon.getXPoints()[0], transformedPolygon.getYPoints()[0]);
 		}
 		glEnd();
 	}

@@ -224,18 +224,28 @@ public class VoronoiNode {
 			return true;
 
 		VoronoiNode rhs = (VoronoiNode) obj;
-		return new EqualsBuilder().append(getWorldPosition(), rhs.getWorldPosition())
-				.append(clipPolygon, rhs.clipPolygon).isEquals();
+		return new EqualsBuilder()
+				.append(getWorldPosition(), rhs.getWorldPosition())
+				.append(clipPolygon, rhs.clipPolygon)
+				.append(getPolygon(), rhs.getPolygon())
+				.isEquals();
 	}
 
 	@Override
 	public int hashCode() {
-		return new HashCodeBuilder(17, 31).append(getWorldPosition()).append(clipPolygon).toHashCode();
+		return new HashCodeBuilder(17, 31)
+				.append(getWorldPosition())
+				.append(clipPolygon)
+				//.append(getPolygon())
+				.toHashCode();
 	}
 
 	@Override
 	public String toString() {
-		return new ToStringBuilder(this, ToStringStyle.JSON_STYLE).append("worldPosition", getWorldPosition())
-				.append("clipPolygon", clipPolygon).build();
+		return new ToStringBuilder(this, ToStringStyle.JSON_STYLE)
+				.append("worldPosition", getWorldPosition())
+				.append("clipPolygon", clipPolygon)
+				//.append("polygon", getPolygon())
+				.build();
 	}
 }
