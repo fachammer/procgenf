@@ -1,7 +1,5 @@
 package com.fabianachammer.procgenf.generation;
 
-import kn.uni.voronoitreemap.j2d.PolygonSimple;
-
 public interface GenerationEngine {
 
 	/**
@@ -14,9 +12,16 @@ public interface GenerationEngine {
 	 *            generator to be added
 	 * @return this generation engine
 	 */
-	GenerationEngine addGenerator(ChunkGeneratorSystem generator);
+	GenerationEngine addGenerator(ChunkGenerator generator);
 
-	GenerationEngine run(PolygonSimple visibilityRegion);
+	/**
+	 * Runs the generation loop by starting at the root chunk, generating it and
+	 * then continue with the process on the child chunks until no more chunks
+	 * are generated
+	 * 
+	 * @return this generation engine
+	 */
+	GenerationEngine run();
 
 	ChunkEntity getRootChunk();
 }

@@ -5,6 +5,8 @@ import java.util.Set;
 
 import org.apache.commons.lang3.builder.EqualsBuilder;
 import org.apache.commons.lang3.builder.HashCodeBuilder;
+import org.apache.commons.lang3.builder.ToStringBuilder;
+import org.apache.commons.lang3.builder.ToStringStyle;
 
 import com.fabianachammer.procgenf.generation.ChunkEntity;
 import com.fabianachammer.procgenf.generation.ChunkComponent;
@@ -71,12 +73,14 @@ public class ChunkEntityImpl implements ChunkEntity {
 	@Override
 	public ChunkEntity addComponent(ChunkComponent component) {
 		components.add(component);		
+		component.setContainerChunk(this);
 		return this;
 	}
 
 	@Override
 	public ChunkEntity removeComponent(ChunkComponent component) {
 		components.remove(component);
+		component.setContainerChunk(null);
 		return this;
 	}
 	
@@ -90,8 +94,6 @@ public class ChunkEntityImpl implements ChunkEntity {
 		
 		ChunkEntityImpl rhs = (ChunkEntityImpl) obj;
 		return new EqualsBuilder()
-				//.append(parent, rhs.parent)
-				.append(children, rhs.children)
 				.append(components, rhs.components)
 				.isEquals();
 	}
@@ -99,9 +101,14 @@ public class ChunkEntityImpl implements ChunkEntity {
 	@Override
 	public int hashCode() {
 		return new HashCodeBuilder(17, 31)
-				//.append(parent)
-				.append(children)
 				.append(components)
 				.toHashCode();
+	}
+	
+	@Override
+	public String toString() {
+		return new ToStringBuilder(this, ToStringStyle.JSON_STYLE)
+				.append("components", components)
+				.build();
 	}
 }

@@ -6,6 +6,8 @@ import java.util.Map;
 
 import org.apache.commons.lang3.builder.EqualsBuilder;
 import org.apache.commons.lang3.builder.HashCodeBuilder;
+import org.apache.commons.lang3.builder.ToStringBuilder;
+import org.apache.commons.lang3.builder.ToStringStyle;
 import org.joml.Matrix3d;
 import org.joml.Vector2d;
 import org.joml.Vector3d;
@@ -75,7 +77,7 @@ public class VoronoiNode {
 	public void recomputeSubDiagram() {
 		if(!isSubdiagramDirty)
 			return;
-		
+
 		PolygonSimple clipPolygon = getClipPolygon();
 
 		if(clipPolygon == null)
@@ -89,7 +91,7 @@ public class VoronoiNode {
 
 		for(VoronoiNode child : children.values())
 			child.recomputeSubDiagram();
-		
+
 		isSubdiagramDirty = false;
 	}
 
@@ -112,14 +114,16 @@ public class VoronoiNode {
 	}
 
 	public VoronoiNode addChild(VoronoiNode child) {
-		if(child.parent != null) {
-			child.parent.removeChild(child);
-		}
+		if(child != null) {
+			if(child.parent != null) {
+				child.parent.removeChild(child);
+			}
 
-		if(child != null && children.putIfAbsent(child.getLocalPosition(), child) == null) {
-			child.parent = this;
-			subSites.add(child.site);
-			isSubdiagramDirty = true;
+			if(children.putIfAbsent(child.getLocalPosition(), child) == null) {
+				child.parent = this;
+				subSites.add(child.site);
+				isSubdiagramDirty = true;
+			}
 		}
 
 		return this;
@@ -144,10 +148,10 @@ public class VoronoiNode {
 	}
 
 	public VoronoiNode setParent(VoronoiNode parent) {
-		if(this.parent != null) {
+		if(this.parent != null){
 			this.parent.removeChild(this);
 		}
-
+		
 		if(parent != null) {
 			parent.addChild(this);
 		}
@@ -210,34 +214,28 @@ public class VoronoiNode {
 	public int getDepth() {
 		return parent == null ? 0 : parent.getDepth() + 1;
 	}
-	
+
 	@Override
 	public boolean equals(Object obj) {
 		if(!(obj instanceof VoronoiNode))
 			return false;
-		
+
 		if(this == obj)
 			return true;
-		
+
 		VoronoiNode rhs = (VoronoiNode) obj;
-		return new EqualsBuilder()
-				.append(parent, rhs.parent)
-				.append(children, rhs.children)
-				.append(site, rhs.site)
-				.append(subDiagram, rhs.subDiagram)
-				.append(localPosition, rhs.localPosition)
-				.append(clipPolygon, rhs.clipPolygon)
-				.append(localToParentTransform, rhs.localToParentTransform)
-				.append(parentToLocalTransform, rhs.parentToLocalTransform)
-				.append(localToWorldTransform, rhs.localToWorldTransform)
-				.append(isSubdiagramDirty, rhs.isSubdiagramDirty)
-				.isEquals();
+		return new EqualsBuilder().append(getWorldPosition(), rhs.getWorldPosition())
+				.append(clipPolygon, rhs.clipPolygon).isEquals();
 	}
-	
+
 	@Override
 	public int hashCode() {
-		return new HashCodeBuilder(17, 31)
-				.append(getWorldPosition())
-				.toHashCode();
+		return new HashCodeBuilder(17, 31).append(getWorldPosition()).append(clipPolygon).toHashCode();
+	}
+
+	@Override
+	public String toString() {
+		return new ToStringBuilder(this, ToStringStyle.JSON_STYLE).append("worldPosition", getWorldPosition())
+				.append("clipPolygon", clipPolygon).build();
 	}
 }

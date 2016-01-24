@@ -1,19 +1,18 @@
-package com.fabianachammer.procgenf.generation.impl;
+package com.fabianachammer.procgenf.generation.impl.components;
 
 import org.apache.commons.lang3.builder.EqualsBuilder;
 import org.apache.commons.lang3.builder.HashCodeBuilder;
+import org.apache.commons.lang3.builder.ToStringBuilder;
+import org.apache.commons.lang3.builder.ToStringStyle;
 
-import com.fabianachammer.procgenf.generation.ChunkEntity;
-import com.fabianachammer.procgenf.generation.ChunkComponent;
 import com.fabianachammer.procgenf.main.impl.VoronoiNode;
 
-public class VoronoiChunkComponent implements ChunkComponent {
+public class VoronoiChunkComponent extends ChunkComponentImpl {
 
 	private VoronoiNode node;
-	private ChunkEntity chunk;
 	
-	public VoronoiChunkComponent(ChunkEntity chunk, VoronoiNode node){
-		this.chunk = chunk;
+	public VoronoiChunkComponent(VoronoiNode node){
+		super();
 		setNode(node);
 	}
 	
@@ -24,11 +23,6 @@ public class VoronoiChunkComponent implements ChunkComponent {
 	
 	public VoronoiNode getNode(){
 		return node;
-	}
-
-	@Override
-	public ChunkEntity getContainerChunk() {
-		return chunk;
 	}
 	
 	@Override
@@ -50,5 +44,12 @@ public class VoronoiChunkComponent implements ChunkComponent {
 		return new HashCodeBuilder(17, 31)
 				.append(node)
 				.toHashCode();
+	}
+	
+	@Override
+	public String toString() {
+		return new ToStringBuilder(this, ToStringStyle.JSON_STYLE)
+				.append("node", node)
+				.build();
 	}
 }

@@ -1,13 +1,9 @@
-apply plugin: 'maven'
-apply plugin: 'java'
 apply plugin: 'application'
 
 mainClassName = 'com.fabianachammer.procgenf.main.Main'
 applicationDefaultJvmArgs = ["-XstartOnFirstThread", "-Djava.awt.headless=true"]
 
-repositories {
-    mavenCentral()
-}
+
 
 sourceSets.all { set ->
   def jarTask = task("${set.name}Jar", type: Jar) {

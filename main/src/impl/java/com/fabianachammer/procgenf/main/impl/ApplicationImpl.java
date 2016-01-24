@@ -4,8 +4,12 @@ import com.fabianachammer.procgenf.generation.ChunkEntity;
 import com.fabianachammer.procgenf.generation.GenerationEngine;
 import com.fabianachammer.procgenf.generation.impl.ChunkEntityImpl;
 import com.fabianachammer.procgenf.generation.impl.GenerationEngineImpl;
-import com.fabianachammer.procgenf.generation.impl.RootChunkComponent;
-import com.fabianachammer.procgenf.generation.impl.RootVoronoiChunkGenerator;
+import com.fabianachammer.procgenf.generation.impl.components.GenerationBoundsChunkComponent;
+import com.fabianachammer.procgenf.generation.impl.components.SeedChunkComponent;
+import com.fabianachammer.procgenf.generation.impl.components.VisibilityChunkComponent;
+import com.fabianachammer.procgenf.generation.impl.components.VoronoiChunkComponent;
+import com.fabianachammer.procgenf.generation.impl.generators.NoiseVoronoiChunkGenerator;
+import com.fabianachammer.procgenf.generation.impl.generators.RootGenerationBoundsGenerator;
 import com.fabianachammer.procgenf.main.Application;
 
 import kn.uni.voronoitreemap.j2d.PolygonSimple;
@@ -32,10 +36,12 @@ public class ApplicationImpl implements Application {
 	private boolean[] previousKeyPressed = new boolean[512];
 	private static final int WIDTH = 700;
 	private static final int HEIGHT = 700;
-	
-	private RootChunkComponent rootChunkComponent;
+
 	private VoronoiRenderer voronoiRenderer;
 	private GenerationEngine generationEngine;
+	private SeedChunkComponent seedComponent;
+	private VoronoiChunkComponent rootVoronoiComponent;
+	private VisibilityChunkComponent visiblityComponent;
 
 	public void run(String[] args) {
 		System.out.println("Hello LWJGL " + Version.getVersion() + "!");
@@ -87,10 +93,20 @@ public class ApplicationImpl implements Application {
 
 		glfwShowWindow(window);
 
-		rootChunkComponent = new RootChunkComponent(null, node(0, 0), 0, RootChunkComponent.GenerationType.Noise, 100, 1);
-		ChunkEntity rootChunk = new ChunkEntityImpl().addComponent(rootChunkComponent);
+		ChunkEntity rootChunk = new ChunkEntityImpl();
+		rootVoronoiComponent = new VoronoiChunkComponent(node(0, 0));
+		seedComponent = new SeedChunkComponent(0);
+		visiblityComponent = new VisibilityChunkComponent(null);
+		rootChunk
+			.addComponent(visiblityComponent)
+			.addComponent(seedComponent)
+			.addComponent(rootVoronoiComponent)
+			.addComponent(new GenerationBoundsChunkComponent());
 		
-		generationEngine = new GenerationEngineImpl(rootChunk, new RootVoronoiChunkGenerator(rootChunkComponent));
+		generationEngine = new GenerationEngineImpl(rootChunk);
+		generationEngine
+			.addGenerator(new RootGenerationBoundsGenerator(100, 1))
+			.addGenerator(new NoiseVoronoiChunkGenerator(1));
 		voronoiRenderer = new VoronoiRenderer();
 	}
 
@@ -139,19 +155,7 @@ public class ApplicationImpl implements Application {
 				fixedVisibility = !fixedVisibility;
 			
 			if(keyPressed[GLFW_KEY_R] && !previousKeyPressed[GLFW_KEY_R]) {
-				rootChunkComponent.setSeed(random.nextInt());
-			}
-			
-			if(keyPressed[GLFW_KEY_1] && !previousKeyPressed[GLFW_KEY_1]) {
-				rootChunkComponent.setGenerationType(RootChunkComponent.GenerationType.Noise);
-			}
-			
-			if(keyPressed[GLFW_KEY_2] && !previousKeyPressed[GLFW_KEY_2]) {
-				rootChunkComponent.setGenerationType(RootChunkComponent.GenerationType.Square);
-			}
-			
-			if(keyPressed[GLFW_KEY_3] && !previousKeyPressed[GLFW_KEY_3]) {
-				rootChunkComponent.setGenerationType(RootChunkComponent.GenerationType.Hexagon);
+				seedComponent.setSeed(random.nextInt());
 			}
 			
 			System.arraycopy(keyPressed, 0, previousKeyPressed, 0, keyPressed.length);
@@ -178,11 +182,17 @@ public class ApplicationImpl implements Application {
 				visibilityPolygon.scale(1 / zoomLevel);
 			visibilityPolygon.translate(cameraPosition.x, cameraPosition.y);
 			
-			generationEngine.run(visibilityPolygon);
+			visiblityComponent.setVisibilityPolygon(visibilityPolygon);
+			
+			generationEngine.run();
 			
 			glClear(GL_COLOR_BUFFER_BIT | GL_DEPTH_BUFFER_BIT);
-			voronoiRenderer.render(rootChunkComponent.getRootNode(), viewMatrix, visibilityPolygon);
-
+			
+			voronoiRenderer.render(rootVoronoiComponent.getNode(), viewMatrix, visibilityPolygon);
+			
+			System.out.println("node children: " + rootVoronoiComponent.getNode().getChildren().size());
+			System.out.println("root children: " + rootVoronoiComponent.getContainerChunk().getChildren().size());
+			
 			glfwSwapBuffers(window);			
 			
 			long t1 = System.nanoTime();

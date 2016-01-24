@@ -7,4 +7,11 @@ allprojects {
 subprojects {
   group = "fabianachammer"
   version = 0.1
+  
+  apply plugin: 'java'
+  apply plugin: 'maven'
+  
+  repositories {
+    mavenCentral()
+  }
 }
