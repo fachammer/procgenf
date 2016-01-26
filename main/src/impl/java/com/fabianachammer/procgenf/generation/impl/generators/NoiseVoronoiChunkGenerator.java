@@ -4,11 +4,13 @@ import static com.fabianachammer.procgenf.generation.impl.Utility.getChunkCompon
 import static com.fabianachammer.procgenf.generation.impl.Utility.getRoot;
 
 import java.awt.geom.Rectangle2D;
+import java.util.ArrayList;
 import java.util.HashSet;
-import java.util.Optional;
+import java.util.List;
 import java.util.Random;
 import java.util.Set;
 
+import org.joml.Matrix3d;
 import org.joml.Vector2d;
 
 import com.fabianachammer.procgenf.generation.ChunkEntity;
@@ -17,11 +19,14 @@ import com.fabianachammer.procgenf.generation.impl.ChunkEntityImpl;
 import com.fabianachammer.procgenf.generation.impl.components.GenerationBoundsChunkComponent;
 import com.fabianachammer.procgenf.generation.impl.components.SeedChunkComponent;
 import com.fabianachammer.procgenf.generation.impl.components.VoronoiChunkComponent;
-import com.fabianachammer.procgenf.main.impl.VoronoiNode;
+import com.fabianachammer.procgenf.main.impl.PolygonTransformer;
 import com.flowpowered.noise.Noise;
 import com.flowpowered.noise.NoiseQuality;
 
+import kn.uni.voronoitreemap.datastructure.OpenList;
+import kn.uni.voronoitreemap.diagram.PowerDiagram;
 import kn.uni.voronoitreemap.j2d.PolygonSimple;
+import kn.uni.voronoitreemap.j2d.Site;
 
 public class NoiseVoronoiChunkGenerator implements ChunkGenerator {
 
@@ -51,28 +56,35 @@ public class NoiseVoronoiChunkGenerator implements ChunkGenerator {
 	
 		int seed = getChunkComponent(getRoot(chunk), SeedChunkComponent.class).get().getSeed();
 		
-		VoronoiNode parent = getChunkComponent(chunk, VoronoiChunkComponent.class).get().getNode();
-		Set<ChunkEntity> subChunks = new HashSet<>();
+		VoronoiChunkComponent parent = getChunkComponent(chunk, VoronoiChunkComponent.class).get();
+		Vector2d parentPosition = parent.getWorldPosition();
+		List<ChunkEntity> subChunks = new ArrayList<>();
+		OpenList sites = new OpenList();
 		for(double x = generationBounds.getMinX(); x < generationBounds.getMaxX(); x += gridSize) {
 			for(double y = generationBounds.getMinY(); y < generationBounds.getMaxY(); y += gridSize) {
 				Rectangle2D.Double gridBounds = new Rectangle2D.Double(x, y, gridSize, gridSize);
 				Vector2d generatedPoint = generatePointInBounds(gridBounds, GenerationType.Noise, seed);
-				generatedPoint.sub(parent.getWorldPosition());
-				VoronoiNode node = new VoronoiNode(generatedPoint).setParent(parent);
+				generatedPoint.sub(parentPosition);
+				Site site = new Site(generatedPoint.x, generatedPoint.y, 0);
+				sites.add(site);
 				subChunks.add(new ChunkEntityImpl()
-						.addComponent(new VoronoiChunkComponent(node))
+						.addComponent(new VoronoiChunkComponent(site))
 						.addComponent(new GenerationBoundsChunkComponent()
 								.setGenerationBounds(gridBounds)
-								.setGridSize(gridSize / 3)));
+								.setGridSize(gridSize / 2)));
 			}
 		}
 		
-		if(chunk.getDepth() == 0)
-			parent.setClipPolygon(calculatePolygonForRectangle(generationBounds));
 		
-		parent.recomputeSubDiagram();
-
-		return subChunks;
+		Matrix3d parentToLocalMatrix = new Matrix3d(parent.getLocalToParentTransform());
+		parentToLocalMatrix.invert();
+		PolygonSimple clipPolygon = PolygonTransformer.transformPolygon(parent.getPolygon() != null ? parent.getPolygon() : calculatePolygonForRectangle(generationBounds), parentToLocalMatrix);
+		
+		PowerDiagram powerDiagram = new PowerDiagram(sites, clipPolygon);
+		
+		powerDiagram.computeDiagram();
+		
+		return new HashSet<>(subChunks);
 	}
 
 	public static PolygonSimple calculatePolygonForRectangle(Rectangle2D.Double rectangle) {
@@ -90,9 +102,6 @@ public class NoiseVoronoiChunkGenerator implements ChunkGenerator {
 	
 	@Override
 	public void degenerateChunk(ChunkEntity chunk) {
-		Optional<VoronoiChunkComponent> voronoiComponent = getChunkComponent(chunk, VoronoiChunkComponent.class);
-		if(voronoiComponent.isPresent())
-			voronoiComponent.get().getNode().setParent(null);
 	}
 
 	private Vector2d generatePointInBounds(Rectangle2D.Double bounds, GenerationType type, int seed) {
@@ -113,10 +122,17 @@ public class NoiseVoronoiChunkGenerator implements ChunkGenerator {
 	public static Vector2d generateNoisePointInBounds(Rectangle2D.Double bounds, int seed) {
 		random.setSeed(seed);
 		double x = Noise.valueCoherentNoise3D(bounds.getCenterX(), bounds.getCenterY(), 0, random.nextInt(),
-				NoiseQuality.BEST) / 2 + 0.5;
+				NoiseQuality.BEST);
 		double y = Noise.valueCoherentNoise3D(bounds.getCenterX(), bounds.getCenterY(), 0, random.nextInt(),
-				NoiseQuality.BEST) / 2 + 0.5;
+				NoiseQuality.BEST);
+		
+		x = mapBetweenRanges(x, -1, 1, 0.1, 0.9);
+		y = mapBetweenRanges(y, -1, 1, 0.1, 0.9);
 		return new Vector2d(bounds.getMinX() + x * bounds.getWidth(), bounds.getMinY() + y * bounds.getHeight());
+	}
+	
+	private static double mapBetweenRanges(double value, double inMin, double inMax, double outMin, double outMax) {
+		return (value - inMin) * (outMax - outMin) / (inMax - inMin) + outMin;
 	}
 
 	public static Vector2d generateSquarePointInBounds(Rectangle2D.Double bounds) {

@@ -1,8 +1,9 @@
 package com.fabianachammer.procgenf.main.impl;
 
 import java.util.Collection;
-import java.util.HashMap;
-import java.util.Map;
+import java.util.Collections;
+import java.util.HashSet;
+import java.util.Set;
 
 import org.apache.commons.lang3.builder.EqualsBuilder;
 import org.apache.commons.lang3.builder.HashCodeBuilder;
@@ -20,7 +21,7 @@ import kn.uni.voronoitreemap.j2d.Site;
 public class VoronoiNode {
 
 	private VoronoiNode parent;
-	private Map<Vector2d, VoronoiNode> children = new HashMap<Vector2d, VoronoiNode>();
+	private Set<VoronoiNode> children = new HashSet<VoronoiNode>();
 	private Site site;
 	private PowerDiagram subDiagram;
 	private Vector2d localPosition;
@@ -53,24 +54,14 @@ public class VoronoiNode {
 	}
 
 	public Collection<VoronoiNode> getChildren() {
-		return children.values();
+		return Collections.unmodifiableSet(children);
 	}
 
 	private void reconstructSubSites() {
 		subSites.clear();
-		for(VoronoiNode child : children.values()) {
+		for(VoronoiNode child : children) {
 			subSites.add(child.site);
 		}
-	}
-
-	private PolygonSimple getClipPolygon() {
-		if(site.getPolygon() != null)
-			return site.getPolygon();
-
-		if(clipPolygon != null)
-			return clipPolygon;
-
-		return null;
 	}
 
 	// Refresh must go top-down
@@ -78,7 +69,7 @@ public class VoronoiNode {
 		if(!isSubdiagramDirty)
 			return;
 
-		PolygonSimple clipPolygon = getClipPolygon();
+		PolygonSimple clipPolygon = getPolygon();
 
 		if(clipPolygon == null)
 			return;
@@ -89,7 +80,9 @@ public class VoronoiNode {
 
 		subDiagram.computeDiagram();
 
-		for(VoronoiNode child : children.values())
+		children = new HashSet<>(children);
+		
+		for(VoronoiNode child : children)
 			child.recomputeSubDiagram();
 
 		isSubdiagramDirty = false;
@@ -119,7 +112,7 @@ public class VoronoiNode {
 				child.parent.removeChild(child);
 			}
 
-			if(children.putIfAbsent(child.getLocalPosition(), child) == null) {
+			if(children.add(child)) {
 				child.parent = this;
 				subSites.add(child.site);
 				isSubdiagramDirty = true;
@@ -130,17 +123,13 @@ public class VoronoiNode {
 	}
 
 	public VoronoiNode removeChild(VoronoiNode child) {
-		if(child != null && children.remove(child.getLocalPosition()) != null) {
+		if(child != null && children.remove(child)) {
 			child.parent = null;
 			reconstructSubSites();
 			isSubdiagramDirty = true;
 		}
 
 		return this;
-	}
-
-	public boolean containsChildAt(Vector2d position) {
-		return children.containsKey(position);
 	}
 
 	public VoronoiNode getParent() {
@@ -160,7 +149,7 @@ public class VoronoiNode {
 	}
 
 	public boolean isParentOf(VoronoiNode child) {
-		return children.containsValue(child);
+		return children.contains(child);
 	}
 
 	public Matrix3d getLocalToParentTransform() {
@@ -236,7 +225,7 @@ public class VoronoiNode {
 		return new HashCodeBuilder(17, 31)
 				.append(getWorldPosition())
 				.append(clipPolygon)
-				//.append(getPolygon())
+				.append(getPolygon())
 				.toHashCode();
 	}
 

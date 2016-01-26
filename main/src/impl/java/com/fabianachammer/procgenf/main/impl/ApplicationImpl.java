@@ -13,6 +13,7 @@ import com.fabianachammer.procgenf.generation.impl.generators.RootGenerationBoun
 import com.fabianachammer.procgenf.main.Application;
 
 import kn.uni.voronoitreemap.j2d.PolygonSimple;
+import kn.uni.voronoitreemap.j2d.Site;
 
 import org.lwjgl.*;
 import org.lwjgl.glfw.*;
@@ -94,7 +95,7 @@ public class ApplicationImpl implements Application {
 		glfwShowWindow(window);
 
 		ChunkEntity rootChunk = new ChunkEntityImpl();
-		rootVoronoiComponent = new VoronoiChunkComponent(node(0, 0));
+		rootVoronoiComponent = new VoronoiChunkComponent(new Site(0, 0, 0));
 		seedComponent = new SeedChunkComponent(0);
 		visiblityComponent = new VisibilityChunkComponent(null);
 		rootChunk
@@ -105,21 +106,9 @@ public class ApplicationImpl implements Application {
 		
 		generationEngine = new GenerationEngineImpl(rootChunk);
 		generationEngine
-			.addGenerator(new RootGenerationBoundsGenerator(100, 3))
-			.addGenerator(new NoiseVoronoiChunkGenerator(2));
+			.addGenerator(new RootGenerationBoundsGenerator(500, 1))
+			.addGenerator(new NoiseVoronoiChunkGenerator(3));
 		voronoiRenderer = new VoronoiRenderer();
-	}
-
-	private static VoronoiNode node(double x, double y, PolygonSimple clipPolygon, VoronoiNode... children) {
-		VoronoiNode node = new VoronoiNode(new Vector2d(x, y), clipPolygon);
-		for(VoronoiNode n : children) {
-			node.addChild(n);
-		}
-		return node;
-	}
-
-	private static VoronoiNode node(double x, double y, VoronoiNode... children) {
-		return node(x, y, null, children);
 	}
 
 	private double zoomLevel = 0.01;
@@ -183,15 +172,12 @@ public class ApplicationImpl implements Application {
 			visibilityPolygon.translate(cameraPosition.x, cameraPosition.y);
 			
 			visiblityComponent.setVisibilityPolygon(visibilityPolygon);
-			
+		
 			generationEngine.run();
 			
 			glClear(GL_COLOR_BUFFER_BIT | GL_DEPTH_BUFFER_BIT);
 			
-			voronoiRenderer.render(rootVoronoiComponent.getNode(), viewMatrix, visibilityPolygon);
-			
-			System.out.println("node children: " + rootVoronoiComponent.getNode().getChildren().size());
-			System.out.println("root children: " + rootVoronoiComponent.getContainerChunk().getChildren().size());
+			voronoiRenderer.render(rootVoronoiComponent, viewMatrix, visibilityPolygon);
 			
 			glfwSwapBuffers(window);			
 			

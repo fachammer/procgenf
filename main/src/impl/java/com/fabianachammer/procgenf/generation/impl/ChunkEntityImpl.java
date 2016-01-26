@@ -1,5 +1,6 @@
 package com.fabianachammer.procgenf.generation.impl;
 
+import java.util.Collections;
 import java.util.HashSet;
 import java.util.Set;
 
@@ -40,12 +41,12 @@ public class ChunkEntityImpl implements ChunkEntity {
 		
 		Set<ChunkEntity> siblings = new HashSet<>(parent.getChildren());
 		siblings.remove(this);
-		return siblings;
+		return Collections.unmodifiableSet(siblings);
 	}
 	
 	@Override
 	public Set<ChunkEntity> getChildren() {
-		return children;
+		return Collections.unmodifiableSet(children);
 	}
 	
 	@Override
@@ -67,7 +68,7 @@ public class ChunkEntityImpl implements ChunkEntity {
 
 	@Override
 	public Set<ChunkComponent> getComponents() {
-		return components;
+		return Collections.unmodifiableSet(components);
 	}
 
 	@Override
@@ -110,5 +111,11 @@ public class ChunkEntityImpl implements ChunkEntity {
 		return new ToStringBuilder(this, ToStringStyle.JSON_STYLE)
 				.append("components", components)
 				.build();
+	}
+	
+	@Override
+	public void onGenerated() {
+		children = new HashSet<>(children);
+		components = new HashSet<>(components);
 	}
 }

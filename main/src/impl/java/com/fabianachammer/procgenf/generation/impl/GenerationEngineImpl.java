@@ -16,13 +16,13 @@ public class GenerationEngineImpl implements GenerationEngine {
 	private Queue<ChunkEntity> generationQueue;
 	private List<ChunkGenerator> chunkGenerators;
 	private ChunkEntity rootChunk;
-	private Set<ChunkEntity> generatedRootChunks;
+	private Set<ChunkEntity> previouslyGeneratedFirstLevelChunks;
 
 	public GenerationEngineImpl(ChunkEntity rootChunk) {
 		this.rootChunk = rootChunk;
 		generationQueue = new LinkedList<>();
 		chunkGenerators = new ArrayList<>();
-		generatedRootChunks = new HashSet<>();
+		previouslyGeneratedFirstLevelChunks = new HashSet<>();
 	}
 
 	private GenerationEngine enqueueChunkForGeneration(ChunkEntity chunk) {
@@ -51,43 +51,40 @@ public class GenerationEngineImpl implements GenerationEngine {
 		setupGenerationQueues();
 
 		while(!generationQueue.isEmpty())
-			generateChunk(generationQueue.remove());
+			generateChunk(generationQueue.remove(), true, true);
 
 		return this;
 	}
 
 	private void setupGenerationQueues() {
-		Set<ChunkEntity> currentRootChunks = generateChunk(rootChunk);
+		Set<ChunkEntity> currentlyGeneratedFirstLevelChunks = generateChunk(rootChunk, false, true);
 
-		currentRootChunks.forEach(chunk -> {
-			rootChunk.addChild(chunk);
-			chunk.setParent(rootChunk);
-		});
+		Set<ChunkEntity> degeneratedChunks = degenerateOldChunks(currentlyGeneratedFirstLevelChunks);
+		Set<ChunkEntity> generatedChunks = generateNewChunks(currentlyGeneratedFirstLevelChunks);
+		previouslyGeneratedFirstLevelChunks = new HashSet<>(previouslyGeneratedFirstLevelChunks);
 
-		Set<ChunkEntity> degeneratedChunks = degenerateOldChunks(currentRootChunks);
-		Set<ChunkEntity> generatedChunks = generateNewChunks(currentRootChunks);
-
-		generatedRootChunks.removeAll(degeneratedChunks);
-		generatedRootChunks.addAll(generatedChunks);
+		previouslyGeneratedFirstLevelChunks.removeAll(degeneratedChunks);
+		previouslyGeneratedFirstLevelChunks.addAll(generatedChunks);
 	}
 
 	private Set<ChunkEntity> degenerateOldChunks(Set<ChunkEntity> currentRootChunks) {
 		Set<ChunkEntity> chunksToBeDegenerated = new HashSet<>();
 
-		chunksToBeDegenerated.addAll(generatedRootChunks);
+		chunksToBeDegenerated.addAll(previouslyGeneratedFirstLevelChunks);
 		chunksToBeDegenerated.removeAll(currentRootChunks);
-		System.out.println("degenerated: " + chunksToBeDegenerated.size());
 		chunksToBeDegenerated.forEach(this::degenerateChunk);
 
+		System.out.println("old chunks degenerated: " + chunksToBeDegenerated.size());
+		
 		return chunksToBeDegenerated;
 	}
 
 	private Set<ChunkEntity> generateNewChunks(Set<ChunkEntity> currentRootChunks) {
 		Set<ChunkEntity> chunksToBeGenerated = new HashSet<>();
 		chunksToBeGenerated.addAll(currentRootChunks);
-		chunksToBeGenerated.removeAll(generatedRootChunks);
-		System.out.println("generated: " + chunksToBeGenerated.size());
+		chunksToBeGenerated.removeAll(previouslyGeneratedFirstLevelChunks);
 		chunksToBeGenerated.forEach(this::enqueueChunkForGeneration);
+		System.out.println("new chunks generated: " + chunksToBeGenerated.size());
 		return chunksToBeGenerated;
 	}
 
@@ -103,7 +100,7 @@ public class GenerationEngineImpl implements GenerationEngine {
 		for(int i = degenerators.size() - 1; i >= 0; i--) {
 			degenerators.get(i).degenerateChunk(chunk);
 		}
-		
+
 		if(chunk.getParent() != null) {
 			chunk.getParent().removeChild(chunk);
 			chunk.setParent(null);
@@ -122,22 +119,27 @@ public class GenerationEngineImpl implements GenerationEngine {
 		return generators;
 	}
 
-	private Set<ChunkEntity> generateChunk(ChunkEntity chunk) {
+	private Set<ChunkEntity> generateChunk(ChunkEntity chunk, boolean enqueueChildren, boolean parentChildren) {
 		List<ChunkGenerator> generators = getGeneratorsForChunk(chunk);
-		Set<ChunkEntity> subChunks = new HashSet<ChunkEntity>();
+		Set<ChunkEntity> subChunks = new HashSet<>();
 		generators.forEach(generator -> {
 			Set<ChunkEntity> generatorSubChunks = generator.generateChunk(chunk);
 			if(generatorSubChunks != null) {
 				generatorSubChunks.forEach(subChunk -> {
-					chunk.addChild(subChunk);
-					subChunk.setParent(chunk);
+					if(parentChildren) {
+						chunk.addChild(subChunk);
+						subChunk.setParent(chunk);
+					}
 					// enqueue chunk so that it can depend on its sibling chunks
 					// when generating sub chunks
-					enqueueChunkForGeneration(subChunk);
+					if(enqueueChildren)
+						enqueueChunkForGeneration(subChunk);
 				});
 				subChunks.addAll(generatorSubChunks);
 			}
 		});
+		
+		chunk.onGenerated();
 
 		return subChunks;
 	}

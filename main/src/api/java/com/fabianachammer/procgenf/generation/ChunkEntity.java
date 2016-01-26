@@ -10,7 +10,7 @@ import java.util.Set;
  *
  */
 public interface ChunkEntity {
-	
+
 	/**
 	 * @return The parent of the chunk or null, if it is the root element.
 	 */
@@ -83,4 +83,9 @@ public interface ChunkEntity {
 	 * @return this chunk
 	 */
 	ChunkEntity removeComponent(ChunkComponent coponent);
+
+	/**
+	 * Called by the generation engine to tell the chunk that its generation has finished
+	 */
+	void onGenerated();
 }
