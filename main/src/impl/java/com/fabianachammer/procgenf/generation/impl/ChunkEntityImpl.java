@@ -116,5 +116,15 @@ public class ChunkEntityImpl implements ChunkEntity {
 	@Override
 	public void onGenerated() {
 		children = new HashSet<>(children);
+		components = new HashSet<>(components);
+	}
+	
+	@Override
+	public ChunkEntity clone() {
+		ChunkEntityImpl clone = new ChunkEntityImpl();
+		for(ChunkComponent component : components)
+			clone.addComponent((ChunkComponent) component.clone());
+		
+		return clone;
 	}
 }

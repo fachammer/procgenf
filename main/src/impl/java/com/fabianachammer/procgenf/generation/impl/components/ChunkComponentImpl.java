@@ -3,7 +3,7 @@ package com.fabianachammer.procgenf.generation.impl.components;
 import com.fabianachammer.procgenf.generation.ChunkComponent;
 import com.fabianachammer.procgenf.generation.ChunkEntity;
 
-public class ChunkComponentImpl implements ChunkComponent {
+public abstract class ChunkComponentImpl implements ChunkComponent {
 
 	private ChunkEntity containerChunk;
 	
@@ -21,4 +21,6 @@ public class ChunkComponentImpl implements ChunkComponent {
 		this.containerChunk = chunk;
 		return this;
 	}
+
+	public abstract ChunkComponent clone();
 }

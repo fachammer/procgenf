@@ -5,6 +5,8 @@ import org.apache.commons.lang3.builder.HashCodeBuilder;
 import org.apache.commons.lang3.builder.ToStringBuilder;
 import org.apache.commons.lang3.builder.ToStringStyle;
 
+import com.fabianachammer.procgenf.generation.ChunkComponent;
+
 public class SeedChunkComponent extends ChunkComponentImpl {
 
 	private int seed;
@@ -40,7 +42,7 @@ public class SeedChunkComponent extends ChunkComponentImpl {
 	@Override
 	public int hashCode() {
 		return new HashCodeBuilder()
-				.append(seed)
+				.append(seed + 10)
 				.toHashCode();
 	}
 	
@@ -48,7 +50,11 @@ public class SeedChunkComponent extends ChunkComponentImpl {
 	public String toString() {
 		return new ToStringBuilder(this, ToStringStyle.JSON_STYLE)
 				.append("seed", seed)
-				.build();
-				
+				.build();			
+	}
+
+	@Override
+	public ChunkComponent clone() {
+		return new SeedChunkComponent(seed);
 	}
 }

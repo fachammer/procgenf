@@ -9,7 +9,7 @@ import java.util.Set;
  * @author fachammer
  *
  */
-public interface ChunkEntity {
+public interface ChunkEntity extends Cloneable {
 
 	/**
 	 * @return The parent of the chunk or null, if it is the root element.
@@ -85,7 +85,10 @@ public interface ChunkEntity {
 	ChunkEntity removeComponent(ChunkComponent coponent);
 
 	/**
-	 * Called by the generation engine to tell the chunk that its generation has finished
+	 * Called by the generation engine to tell the chunk that its generation has
+	 * finished
 	 */
 	void onGenerated();
+	
+	ChunkEntity clone();
 }

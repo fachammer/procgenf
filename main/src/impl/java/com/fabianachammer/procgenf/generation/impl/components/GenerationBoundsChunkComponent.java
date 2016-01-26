@@ -7,6 +7,8 @@ import org.apache.commons.lang3.builder.HashCodeBuilder;
 import org.apache.commons.lang3.builder.ToStringBuilder;
 import org.apache.commons.lang3.builder.ToStringStyle;
 
+import com.fabianachammer.procgenf.generation.ChunkComponent;
+
 public class GenerationBoundsChunkComponent extends ChunkComponentImpl {
 
 	private Rectangle2D.Double generationBounds;
@@ -59,5 +61,12 @@ public class GenerationBoundsChunkComponent extends ChunkComponentImpl {
 				.append("generationBounds", generationBounds)
 				.append("gridSize", gridSize)
 				.build();
+	}
+	
+	@Override
+	public ChunkComponent clone() {
+		return new GenerationBoundsChunkComponent()
+				.setGenerationBounds((Rectangle2D.Double) generationBounds.clone())
+				.setGridSize(gridSize);
 	}
 }

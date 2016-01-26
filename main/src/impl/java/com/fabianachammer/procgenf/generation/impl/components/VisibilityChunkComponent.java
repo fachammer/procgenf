@@ -5,6 +5,8 @@ import org.apache.commons.lang3.builder.HashCodeBuilder;
 import org.apache.commons.lang3.builder.ToStringBuilder;
 import org.apache.commons.lang3.builder.ToStringStyle;
 
+import com.fabianachammer.procgenf.generation.ChunkComponent;
+
 import kn.uni.voronoitreemap.j2d.PolygonSimple;
 
 public class VisibilityChunkComponent extends ChunkComponentImpl {
@@ -51,5 +53,10 @@ public class VisibilityChunkComponent extends ChunkComponentImpl {
 		return new ToStringBuilder(this, ToStringStyle.JSON_STYLE)
 				.append("visibilityPolygon", visibilityPolygon)
 				.build();
+	}
+	
+	@Override
+	public ChunkComponent clone() {
+		return new VisibilityChunkComponent(visibilityPolygon.clone());
 	}
 }

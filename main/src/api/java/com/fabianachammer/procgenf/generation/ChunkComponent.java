@@ -1,6 +1,6 @@
 package com.fabianachammer.procgenf.generation;
 
-public interface ChunkComponent {
+public interface ChunkComponent extends Cloneable {
 
 	/**
 	 * @return the chunk that this component is contained in
@@ -13,4 +13,6 @@ public interface ChunkComponent {
 	 * @return this chunk component
 	 */
 	ChunkComponent setContainerChunk(ChunkEntity chunk);
+	
+	ChunkComponent clone();
 }
