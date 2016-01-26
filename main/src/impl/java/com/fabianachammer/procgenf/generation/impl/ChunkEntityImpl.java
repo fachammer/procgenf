@@ -116,6 +116,5 @@ public class ChunkEntityImpl implements ChunkEntity {
 	@Override
 	public void onGenerated() {
 		children = new HashSet<>(children);
-		components = new HashSet<>(components);
 	}
 }

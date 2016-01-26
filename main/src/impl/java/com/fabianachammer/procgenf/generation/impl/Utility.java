@@ -27,6 +27,18 @@ public class Utility {
 		return root;
 	}
 	
+	public static <T extends ChunkComponent> Optional<T> getChunkComponentInAncestor(ChunkEntity chunk, Class<T> componentClass) {
+		if(chunk == null)
+			return null;
+		
+		Optional<T> component = getChunkComponent(chunk, componentClass);
+		if(component != null && component.isPresent())
+			return component;
+		
+		return getChunkComponentInAncestor(chunk.getParent(), componentClass);
+		
+	}
+	
 	public static PolygonSimple calculatePolygonForRectangle(Rectangle2D.Double rectangle) {
 		return new PolygonSimple(new double[]{
 				rectangle.getMinX(), rectangle.getMaxX(), rectangle.getMaxX(), rectangle.getMinX()

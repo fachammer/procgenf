@@ -18,6 +18,7 @@ import org.lwjgl.opengl.GL11;
 import com.fabianachammer.procgenf.generation.ChunkEntity;
 import com.fabianachammer.procgenf.generation.impl.Utility;
 import com.fabianachammer.procgenf.generation.impl.components.VoronoiChunkComponent;
+import com.flowpowered.noise.module.source.Voronoi;
 
 import kn.uni.voronoitreemap.j2d.PolygonSimple;
 
@@ -29,9 +30,9 @@ public class VoronoiRenderer {
 	private static void renderNodePoint(VoronoiChunkComponent node, Matrix3d viewMatrix) {
 		if(node.getContainerChunk().getDepth() <= 0)
 			return;
-		
+
 		node.getParent().ifPresent(parent -> {
-			
+
 			if(node.getPolygon() != null) {
 				if(!node.getPolygon().contains(node.getSite().getX(), node.getSite().getY()))
 					return;
@@ -49,13 +50,14 @@ public class VoronoiRenderer {
 				glVertex2d(nodeWorldPosition.x, nodeWorldPosition.y);
 			}
 			glEnd();
-			
+
 			if(node.getContainerChunk().getDepth() <= 1)
 				return;
-			
+
 			GL11.glColor3d(1, 0, 0);
 			glLineWidth(BASE_LINE_WIDTH * 0.1f / (node.getContainerChunk().getDepth() + 1));
-			glBegin(GL11.GL_LINES);{
+			glBegin(GL11.GL_LINES);
+			{
 				glVertex2d(nodeWorldPosition.x, nodeWorldPosition.y);
 				glVertex2d(parentWorldPosition.x, parentWorldPosition.y);
 			}
@@ -98,63 +100,58 @@ public class VoronoiRenderer {
 		}
 	}
 
-	public void render(VoronoiChunkComponent root, Matrix3d viewMatrix, PolygonSimple clipPolygon) {
-		Queue<VoronoiChunkComponent> nodes = new LinkedList<VoronoiChunkComponent>();
+	public void render(ChunkEntity root, Matrix3d viewMatrix, PolygonSimple clipPolygon) {
+		Queue<ChunkEntity> nodes = new LinkedList<ChunkEntity>();
 
 		nodes.add(root);
 		while(!nodes.isEmpty()) {
-			VoronoiChunkComponent node = nodes.remove();
-			renderNodePolygon(node, viewMatrix);
-			for(ChunkEntity child : node.getContainerChunk().getChildren()) {
-				Optional<VoronoiChunkComponent> voronoiChild = Utility.getChunkComponent(child,
-						VoronoiChunkComponent.class);
-				if(voronoiChild.isPresent())
-					nodes.add(voronoiChild.get());
+			ChunkEntity node = nodes.remove();
+			Utility.getChunkComponent(node, VoronoiChunkComponent.class)
+					.ifPresent(n -> renderNodePolygon(n, viewMatrix));
+			for(ChunkEntity child : node.getChildren()) {
+				nodes.add(child);
 			}
-
 		}
 
 		nodes.clear();
 		nodes.add(root);
 		while(!nodes.isEmpty()) {
-			VoronoiChunkComponent voronoiChunk = nodes.remove();
-			ChunkEntity node = voronoiChunk.getContainerChunk();
+			ChunkEntity node = nodes.remove();
 
 			if(node.getDepth() > 0) {
-				if(voronoiChunk.getPolygon() == null)
-					continue;
-				GL11.glColor3d(0.0, 0, 0);
-				glLineWidth(BASE_LINE_WIDTH / (node.getDepth() + 1));
+				if(!Utility.getChunkComponent(node, VoronoiChunkComponent.class).map(voronoiChunk -> {
+					if(voronoiChunk.getPolygon() == null)
+						return false;
+					GL11.glColor3d(0.0, 0, 0);
+					glLineWidth(BASE_LINE_WIDTH / (node.getDepth() + 1));
 
-				TEMP.set(viewMatrix);
-				voronoiChunk.getParent().ifPresent(parent -> TEMP.mul(parent.getLocalToWorldTransform()));
-				glBegin(GL11.GL_LINE_LOOP);
-				{
-					renderPolygon(PolygonTransformer.transformPolygon(voronoiChunk.getPolygon(), TEMP));
+					TEMP.set(viewMatrix);
+					voronoiChunk.getParent().ifPresent(parent -> TEMP.mul(parent.getLocalToWorldTransform()));
+					glBegin(GL11.GL_LINE_LOOP);
+					{
+						renderPolygon(PolygonTransformer.transformPolygon(voronoiChunk.getPolygon(), TEMP));
+					}
+					glEnd();
+					
+					return true;
+				}).orElse(true)){
+					continue;
 				}
-				glEnd();
 			}
 
 			for(ChunkEntity child : node.getChildren()) {
-				Optional<VoronoiChunkComponent> voronoiChild = Utility.getChunkComponent(child,
-						VoronoiChunkComponent.class);
-				if(voronoiChild.isPresent())
-					nodes.add(voronoiChild.get());
+				nodes.add(child);
 			}
 		}
 
 		nodes.clear();
 		nodes.add(root);
 		while(!nodes.isEmpty()) {
-			VoronoiChunkComponent voronoiChunk = nodes.remove();
-			ChunkEntity node = voronoiChunk.getContainerChunk();
+			ChunkEntity node = nodes.remove();
 
-			renderNodePoint(voronoiChunk, viewMatrix);
+			Utility.getChunkComponent(node, VoronoiChunkComponent.class).ifPresent(voronoiChunk -> renderNodePoint(voronoiChunk, viewMatrix));
 			for(ChunkEntity child : node.getChildren()) {
-				Optional<VoronoiChunkComponent> voronoiChild = Utility.getChunkComponent(child,
-						VoronoiChunkComponent.class);
-				if(voronoiChild.isPresent())
-					nodes.add(voronoiChild.get());
+				nodes.add(child);
 			}
 		}
 

@@ -1,12 +1,14 @@
 package com.fabianachammer.procgenf.generation.impl.generators;
 
 import static com.fabianachammer.procgenf.generation.impl.Utility.getChunkComponent;
+import static com.fabianachammer.procgenf.generation.impl.Utility.getChunkComponentInAncestor;
 import static com.fabianachammer.procgenf.generation.impl.Utility.getRoot;
 
 import java.awt.geom.Rectangle2D;
 import java.util.ArrayList;
 import java.util.HashSet;
 import java.util.List;
+import java.util.Optional;
 import java.util.Random;
 import java.util.Set;
 
@@ -44,7 +46,6 @@ public class NoiseVoronoiChunkGenerator implements ChunkGenerator {
 	public boolean willGenerateChunk(ChunkEntity chunk) {
 		return getChunkComponent(chunk, GenerationBoundsChunkComponent.class).isPresent()
 				&& getChunkComponent(getRoot(chunk), SeedChunkComponent.class).isPresent()
-				&& getChunkComponent(chunk, VoronoiChunkComponent.class).isPresent() 
 				&& chunk.getDepth() < maxDepth;
 	}
 
@@ -56,8 +57,8 @@ public class NoiseVoronoiChunkGenerator implements ChunkGenerator {
 	
 		int seed = getChunkComponent(getRoot(chunk), SeedChunkComponent.class).get().getSeed();
 		
-		VoronoiChunkComponent parent = getChunkComponent(chunk, VoronoiChunkComponent.class).get();
-		Vector2d parentPosition = parent.getWorldPosition();
+		Optional<VoronoiChunkComponent> parent = getChunkComponentInAncestor(chunk, VoronoiChunkComponent.class);
+		Vector2d parentPosition = parent.map(p -> p.getWorldPosition()).orElse(new Vector2d(0, 0));
 		List<ChunkEntity> subChunks = new ArrayList<>();
 		OpenList sites = new OpenList();
 		for(double x = generationBounds.getMinX(); x < generationBounds.getMaxX(); x += gridSize) {
@@ -75,10 +76,15 @@ public class NoiseVoronoiChunkGenerator implements ChunkGenerator {
 			}
 		}
 		
+		Matrix3d parentToLocalMatrix = parent.map(p -> {
+			Matrix3d parentToLocal = new Matrix3d(p.getLocalToParentTransform());
+			parentToLocal.invert();
+			return parentToLocal;
+		}).orElse(new Matrix3d());
 		
-		Matrix3d parentToLocalMatrix = new Matrix3d(parent.getLocalToParentTransform());
-		parentToLocalMatrix.invert();
-		PolygonSimple clipPolygon = PolygonTransformer.transformPolygon(parent.getPolygon() != null ? parent.getPolygon() : calculatePolygonForRectangle(generationBounds), parentToLocalMatrix);
+		PolygonSimple parentPolygon = parent.map(p -> p.getPolygon()).orElse(calculatePolygonForRectangle(generationBounds));
+		
+		PolygonSimple clipPolygon = parent.isPresent() ? PolygonTransformer.transformPolygon(parentPolygon, parentToLocalMatrix) : parentPolygon;
 		
 		PowerDiagram powerDiagram = new PowerDiagram(sites, clipPolygon);
 		
@@ -86,7 +92,7 @@ public class NoiseVoronoiChunkGenerator implements ChunkGenerator {
 		
 		return new HashSet<>(subChunks);
 	}
-
+	
 	public static PolygonSimple calculatePolygonForRectangle(Rectangle2D.Double rectangle) {
 		return new PolygonSimple(
 				new double[] { rectangle.getMinX(), rectangle.getMaxX(), rectangle.getMaxX(), rectangle.getMinX() },

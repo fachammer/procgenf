@@ -43,7 +43,8 @@ public class ApplicationImpl implements Application {
 	private SeedChunkComponent seedComponent;
 	private VoronoiChunkComponent rootVoronoiComponent;
 	private VisibilityChunkComponent visiblityComponent;
-
+	private ChunkEntity rootChunk;
+	
 	public void run(String[] args) {
 		System.out.println("Hello LWJGL " + Version.getVersion() + "!");
 
@@ -94,20 +95,19 @@ public class ApplicationImpl implements Application {
 
 		glfwShowWindow(window);
 
-		ChunkEntity rootChunk = new ChunkEntityImpl();
+		rootChunk = new ChunkEntityImpl();
 		rootVoronoiComponent = new VoronoiChunkComponent(new Site(0, 0, 0));
 		seedComponent = new SeedChunkComponent(0);
 		visiblityComponent = new VisibilityChunkComponent(null);
 		rootChunk
 			.addComponent(visiblityComponent)
 			.addComponent(seedComponent)
-			.addComponent(rootVoronoiComponent)
-			.addComponent(new GenerationBoundsChunkComponent());
+			.addComponent(rootVoronoiComponent);
 		
 		generationEngine = new GenerationEngineImpl(rootChunk);
 		generationEngine
 			.addGenerator(new RootGenerationBoundsGenerator(500, 1))
-			.addGenerator(new NoiseVoronoiChunkGenerator(3));
+			.addGenerator(new NoiseVoronoiChunkGenerator(6));
 		voronoiRenderer = new VoronoiRenderer();
 	}
 
@@ -177,7 +177,7 @@ public class ApplicationImpl implements Application {
 			
 			glClear(GL_COLOR_BUFFER_BIT | GL_DEPTH_BUFFER_BIT);
 			
-			voronoiRenderer.render(rootVoronoiComponent, viewMatrix, visibilityPolygon);
+			voronoiRenderer.render(rootChunk, viewMatrix, visibilityPolygon);
 			
 			glfwSwapBuffers(window);			
 			

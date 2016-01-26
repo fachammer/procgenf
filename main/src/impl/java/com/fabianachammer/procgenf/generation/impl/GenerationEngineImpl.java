@@ -76,7 +76,7 @@ public class GenerationEngineImpl implements GenerationEngine {
 
 		System.out.println("old chunks degenerated: " + chunksToBeDegenerated.size());
 		
-		return chunksToBeDegenerated;
+		return new HashSet<>(chunksToBeDegenerated);
 	}
 
 	private Set<ChunkEntity> generateNewChunks(Set<ChunkEntity> currentRootChunks) {
