@@ -123,7 +123,7 @@ public class ChunkEntityImpl implements ChunkEntity {
 	public ChunkEntity clone() {
 		ChunkEntityImpl clone = new ChunkEntityImpl();
 		for(ChunkComponent component : components)
-			clone.addComponent((ChunkComponent) component.clone());
+			clone.addComponent(component.clone());
 		
 		return clone;
 	}

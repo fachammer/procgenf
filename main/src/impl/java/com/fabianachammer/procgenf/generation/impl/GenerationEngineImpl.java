@@ -53,8 +53,10 @@ public class GenerationEngineImpl implements GenerationEngine {
 	public GenerationEngine run() {
 		if(!rootChunk.equals(previousRootChunk)) {
 			System.out.println("NEW GENERATION!");
-			alreadyGeneratedChunks.put(rootChunk, alreadyGeneratedChunks.getOrDefault(previousRootChunk, new HashSet<>()));
-			alreadyGeneratedChunks.remove(previousRootChunk);
+
+			Set<ChunkEntity> previousRootChildren = alreadyGeneratedChunks.remove(previousRootChunk);
+			previousRootChildren = previousRootChildren != null ? previousRootChildren : new HashSet<>();
+			alreadyGeneratedChunks.put(rootChunk, previousRootChildren);
 			
 			generateChunkWithMemoization(rootChunk);
 
@@ -62,6 +64,7 @@ public class GenerationEngineImpl implements GenerationEngine {
 				generateChunkWithMemoization(generationQueue.remove());
 
 			previousRootChunk = rootChunk.clone();
+			alreadyGeneratedChunks.put(previousRootChunk, alreadyGeneratedChunks.get(rootChunk));
 		}
 
 		return this;
@@ -71,6 +74,9 @@ public class GenerationEngineImpl implements GenerationEngine {
 		Set<ChunkEntity> newlyGenerated = generateChunk(chunk);
 		Set<ChunkEntity> alreadyGenerated = alreadyGeneratedChunks.getOrDefault(chunk, new HashSet<>());
 
+		System.out.println("newly generated chunks: " + newlyGenerated.size());
+		System.out.println("already generated chunks: " + alreadyGenerated.size());
+		
 		Set<ChunkEntity> chunksToDegenerate = new HashSet<>();
 		Set<ChunkEntity> chunksToGenerate = new HashSet<>();
 
@@ -88,7 +94,7 @@ public class GenerationEngineImpl implements GenerationEngine {
 
 		alreadyGenerated.removeAll(chunksToDegenerate);
 		alreadyGenerated.addAll(chunksToGenerate);
-		alreadyGeneratedChunks.put(chunk, alreadyGenerated);
+		alreadyGeneratedChunks.put(chunk.clone(), alreadyGenerated);
 	}
 
 	private void degenerateChunk(ChunkEntity chunk) {
