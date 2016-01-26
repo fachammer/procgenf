@@ -8,7 +8,6 @@ import static org.lwjgl.opengl.GL11.glLineWidth;
 import static org.lwjgl.opengl.GL11.glVertex2d;
 
 import java.util.LinkedList;
-import java.util.Optional;
 import java.util.Queue;
 
 import org.joml.Matrix3d;
@@ -18,7 +17,6 @@ import org.lwjgl.opengl.GL11;
 import com.fabianachammer.procgenf.generation.ChunkEntity;
 import com.fabianachammer.procgenf.generation.impl.Utility;
 import com.fabianachammer.procgenf.generation.impl.components.VoronoiChunkComponent;
-import com.flowpowered.noise.module.source.Voronoi;
 
 import kn.uni.voronoitreemap.j2d.PolygonSimple;
 

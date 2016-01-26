@@ -4,7 +4,6 @@ import com.fabianachammer.procgenf.generation.ChunkEntity;
 import com.fabianachammer.procgenf.generation.GenerationEngine;
 import com.fabianachammer.procgenf.generation.impl.ChunkEntityImpl;
 import com.fabianachammer.procgenf.generation.impl.GenerationEngineImpl;
-import com.fabianachammer.procgenf.generation.impl.components.GenerationBoundsChunkComponent;
 import com.fabianachammer.procgenf.generation.impl.components.SeedChunkComponent;
 import com.fabianachammer.procgenf.generation.impl.components.VisibilityChunkComponent;
 import com.fabianachammer.procgenf.generation.impl.components.VoronoiChunkComponent;
