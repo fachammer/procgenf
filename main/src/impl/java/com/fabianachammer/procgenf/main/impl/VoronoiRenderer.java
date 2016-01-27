@@ -29,6 +29,7 @@ public class VoronoiRenderer {
 		if(node.getContainerChunk().getDepth() <= 0)
 			return;
 
+		/*
 		node.getParent().ifPresent(parent -> {
 
 			if(node.getPolygon() != null) {
@@ -38,9 +39,7 @@ public class VoronoiRenderer {
 
 			GL11.glColor3d(0, 0, 0);
 			TEMP.set(viewMatrix);
-			TEMP.mul(parent.getLocalToWorldTransform());
-			Vector3d parentWorldPosition = TEMP.transform(new Vector3d(0, 0, 1));
-			TEMP.mul(node.getLocalToParentTransform());
+			TEMP.mul(node.getLocalToWorldTransform());
 			Vector3d nodeWorldPosition = TEMP.transform(new Vector3d(0, 0, 1));
 			glPointSize(BASE_SITE_SIZE / (node.getContainerChunk().getDepth() + 1));
 			glBegin(GL_POINTS);
@@ -48,19 +47,7 @@ public class VoronoiRenderer {
 				glVertex2d(nodeWorldPosition.x, nodeWorldPosition.y);
 			}
 			glEnd();
-
-			if(node.getContainerChunk().getDepth() <= 1)
-				return;
-
-			GL11.glColor3d(1, 0, 0);
-			glLineWidth(BASE_LINE_WIDTH * 0.1f / (node.getContainerChunk().getDepth() + 1));
-			glBegin(GL11.GL_LINES);
-			{
-				glVertex2d(nodeWorldPosition.x, nodeWorldPosition.y);
-				glVertex2d(parentWorldPosition.x, parentWorldPosition.y);
-			}
-			glEnd();
-		});
+		});*/
 	}
 
 	private static final Matrix3d TEMP = new Matrix3d();
@@ -142,6 +129,7 @@ public class VoronoiRenderer {
 			}
 		}
 
+		
 		nodes.clear();
 		nodes.add(root);
 		while(!nodes.isEmpty()) {

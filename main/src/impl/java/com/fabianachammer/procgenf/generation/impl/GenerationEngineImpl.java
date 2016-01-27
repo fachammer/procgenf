@@ -52,19 +52,19 @@ public class GenerationEngineImpl implements GenerationEngine {
 	@Override
 	public GenerationEngine run() {
 		if(!rootChunk.equals(previousRootChunk)) {
-			System.out.println("NEW GENERATION!");
-
 			Set<ChunkEntity> previousRootChildren = alreadyGeneratedChunks.remove(previousRootChunk);
-			previousRootChildren = previousRootChildren != null ? previousRootChildren : new HashSet<>();
-			alreadyGeneratedChunks.put(rootChunk, previousRootChildren);
+			if(previousRootChildren != null)
+				alreadyGeneratedChunks.put(rootChunk.clone(), previousRootChildren);
 			
 			generateChunkWithMemoization(rootChunk);
 
-			while(!generationQueue.isEmpty())
+			int generatedChunksCount = 1;
+			while(!generationQueue.isEmpty()) {
 				generateChunkWithMemoization(generationQueue.remove());
-
+				generatedChunksCount++;
+			}
+			
 			previousRootChunk = rootChunk.clone();
-			alreadyGeneratedChunks.put(previousRootChunk, alreadyGeneratedChunks.get(rootChunk));
 		}
 
 		return this;
@@ -74,9 +74,6 @@ public class GenerationEngineImpl implements GenerationEngine {
 		Set<ChunkEntity> newlyGenerated = generateChunk(chunk);
 		Set<ChunkEntity> alreadyGenerated = alreadyGeneratedChunks.getOrDefault(chunk, new HashSet<>());
 
-		System.out.println("newly generated chunks: " + newlyGenerated.size());
-		System.out.println("already generated chunks: " + alreadyGenerated.size());
-		
 		Set<ChunkEntity> chunksToDegenerate = new HashSet<>();
 		Set<ChunkEntity> chunksToGenerate = new HashSet<>();
 
@@ -84,17 +81,14 @@ public class GenerationEngineImpl implements GenerationEngine {
 		chunksToDegenerate.removeAll(newlyGenerated);
 		chunksToDegenerate.forEach(this::degenerateChunk);
 
-		System.out.println("old chunks to degenerate: " + chunksToDegenerate.size());
-
 		chunksToGenerate.addAll(newlyGenerated);
 		chunksToGenerate.removeAll(alreadyGenerated);
 		chunksToGenerate.forEach(this::enqueueChunkForGeneration);
 
-		System.out.println("new chunks to generate: " + chunksToGenerate.size());
-
 		alreadyGenerated.removeAll(chunksToDegenerate);
 		alreadyGenerated.addAll(chunksToGenerate);
-		alreadyGeneratedChunks.put(chunk.clone(), alreadyGenerated);
+		ChunkEntity clone = chunk.clone();
+		alreadyGeneratedChunks.put(clone, alreadyGenerated);
 	}
 
 	private void degenerateChunk(ChunkEntity chunk) {

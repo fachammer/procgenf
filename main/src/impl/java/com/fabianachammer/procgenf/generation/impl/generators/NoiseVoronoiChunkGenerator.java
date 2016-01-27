@@ -64,7 +64,7 @@ public class NoiseVoronoiChunkGenerator implements ChunkGenerator {
 		for(double x = generationBounds.getMinX(); x < generationBounds.getMaxX(); x += gridSize) {
 			for(double y = generationBounds.getMinY(); y < generationBounds.getMaxY(); y += gridSize) {
 				Rectangle2D.Double gridBounds = new Rectangle2D.Double(x, y, gridSize, gridSize);
-				Vector2d generatedPoint = generatePointInBounds(gridBounds, GenerationType.Noise, seed);
+				Vector2d generatedPoint = generatePointInBounds(gridBounds, GenerationType.Hexagon, seed);
 				generatedPoint.sub(parentPosition);
 				Site site = new Site(generatedPoint.x, generatedPoint.y, 0);
 				sites.add(site);
