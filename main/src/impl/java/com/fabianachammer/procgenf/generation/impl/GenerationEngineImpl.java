@@ -18,11 +18,9 @@ public class GenerationEngineImpl implements GenerationEngine {
 	private Queue<ChunkEntity> generationQueue;
 	private List<ChunkGenerator> chunkGenerators;
 	private ChunkEntity previousRootChunk;
-	private ChunkEntity rootChunk;
 	private Map<ChunkEntity, Set<ChunkEntity>> alreadyGeneratedChunks;
 
-	public GenerationEngineImpl(ChunkEntity rootChunk) {
-		this.rootChunk = rootChunk;
+	public GenerationEngineImpl() {
 		generationQueue = new LinkedList<>();
 		chunkGenerators = new ArrayList<>();
 		alreadyGeneratedChunks = new HashMap<>();
@@ -50,7 +48,7 @@ public class GenerationEngineImpl implements GenerationEngine {
 	}
 
 	@Override
-	public GenerationEngine run() {
+	public GenerationEngine run(ChunkEntity rootChunk) {
 		if(!rootChunk.equals(previousRootChunk)) {
 			Set<ChunkEntity> previousRootChildren = alreadyGeneratedChunks.remove(previousRootChunk);
 			if(previousRootChildren != null)
@@ -63,6 +61,7 @@ public class GenerationEngineImpl implements GenerationEngine {
 				generateChunkWithMemoization(generationQueue.remove());
 				generatedChunksCount++;
 			}
+			System.out.println("newly generated chunks: " + generatedChunksCount);
 			
 			previousRootChunk = rootChunk.clone();
 		}
@@ -141,10 +140,5 @@ public class GenerationEngineImpl implements GenerationEngine {
 		chunk.onGenerated();
 
 		return subChunks;
-	}
-
-	@Override
-	public ChunkEntity getRootChunk() {
-		return rootChunk;
 	}
 }

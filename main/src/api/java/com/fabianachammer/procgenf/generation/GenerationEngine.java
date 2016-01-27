@@ -21,7 +21,5 @@ public interface GenerationEngine {
 	 * 
 	 * @return this generation engine
 	 */
-	GenerationEngine run();
-
-	ChunkEntity getRootChunk();
+	GenerationEngine run(ChunkEntity rootChunk);
 }

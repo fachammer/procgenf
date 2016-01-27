@@ -1,9 +1,7 @@
 package com.fabianachammer.procgenf.main.impl;
 
-import static org.lwjgl.opengl.GL11.GL_POINTS;
 import static org.lwjgl.opengl.GL11.glBegin;
 import static org.lwjgl.opengl.GL11.glEnd;
-import static org.lwjgl.opengl.GL11.glPointSize;
 import static org.lwjgl.opengl.GL11.glLineWidth;
 import static org.lwjgl.opengl.GL11.glVertex2d;
 
@@ -11,7 +9,6 @@ import java.util.LinkedList;
 import java.util.Queue;
 
 import org.joml.Matrix3d;
-import org.joml.Vector3d;
 import org.lwjgl.opengl.GL11;
 
 import com.fabianachammer.procgenf.generation.ChunkEntity;
@@ -23,32 +20,6 @@ import kn.uni.voronoitreemap.j2d.PolygonSimple;
 public class VoronoiRenderer {
 
 	private static final int BASE_LINE_WIDTH = 40;
-	private static final int BASE_SITE_SIZE = 30;
-
-	private static void renderNodePoint(VoronoiChunkComponent node, Matrix3d viewMatrix) {
-		if(node.getContainerChunk().getDepth() <= 0)
-			return;
-
-		/*
-		node.getParent().ifPresent(parent -> {
-
-			if(node.getPolygon() != null) {
-				if(!node.getPolygon().contains(node.getSite().getX(), node.getSite().getY()))
-					return;
-			}
-
-			GL11.glColor3d(0, 0, 0);
-			TEMP.set(viewMatrix);
-			TEMP.mul(node.getLocalToWorldTransform());
-			Vector3d nodeWorldPosition = TEMP.transform(new Vector3d(0, 0, 1));
-			glPointSize(BASE_SITE_SIZE / (node.getContainerChunk().getDepth() + 1));
-			glBegin(GL_POINTS);
-			{
-				glVertex2d(nodeWorldPosition.x, nodeWorldPosition.y);
-			}
-			glEnd();
-		});*/
-	}
 
 	private static final Matrix3d TEMP = new Matrix3d();
 
@@ -124,18 +95,6 @@ public class VoronoiRenderer {
 				}
 			}
 
-			for(ChunkEntity child : node.getChildren()) {
-				nodes.add(child);
-			}
-		}
-
-		
-		nodes.clear();
-		nodes.add(root);
-		while(!nodes.isEmpty()) {
-			ChunkEntity node = nodes.remove();
-
-			Utility.getChunkComponent(node, VoronoiChunkComponent.class).ifPresent(voronoiChunk -> renderNodePoint(voronoiChunk, viewMatrix));
 			for(ChunkEntity child : node.getChildren()) {
 				nodes.add(child);
 			}

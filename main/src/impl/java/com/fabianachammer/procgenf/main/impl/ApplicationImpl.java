@@ -103,8 +103,7 @@ public class ApplicationImpl implements Application {
 			.addComponent(seedComponent)
 			.addComponent(rootVoronoiComponent);
 		
-		generationEngine = new GenerationEngineImpl(rootChunk);
-		generationEngine
+		generationEngine = new GenerationEngineImpl()
 			.addGenerator(new RootGenerationBoundsGenerator(1000, 1))
 			.addGenerator(new NoiseVoronoiChunkGenerator(5));
 		voronoiRenderer = new VoronoiRenderer();
@@ -172,7 +171,7 @@ public class ApplicationImpl implements Application {
 			
 			visiblityComponent.setVisibilityPolygon(visibilityPolygon);
 		
-			generationEngine.run();
+			generationEngine.run(rootChunk);
 			
 			glClear(GL_COLOR_BUFFER_BIT | GL_DEPTH_BUFFER_BIT);
 			
