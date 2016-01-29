@@ -24,13 +24,16 @@ public class RootGenerationBoundsGenerator implements ChunkGenerator {
 		this.visibilityOffset = visibilityOffset;
 	}
 	
-	@Override
+	
 	public boolean willGenerateChunk(ChunkEntity chunk) {
 		return getChunkComponent(chunk, VisibilityChunkComponent.class).isPresent();
 	}
 	
 	@Override
-	public Set<ChunkEntity> generateChunk(ChunkEntity chunk) {
+	public Set<ChunkEntity> generateChunkChildren(ChunkEntity chunk) {
+		if(!willGenerateChunk(chunk))
+			return null;
+		
 		VisibilityChunkComponent visibilityComponent = getChunkComponent(chunk, VisibilityChunkComponent.class).get();
 		Rectangle2D.Double generationBounds = calculateGenerationBoundsFromVisibilityRegion(visibilityComponent.getVisibilityPolygon());
 		
@@ -63,11 +66,6 @@ public class RootGenerationBoundsGenerator implements ChunkGenerator {
 		return generationBounds;
 	}
 
-	@Override
-	public boolean willDegenerateChunk(ChunkEntity chunk) {
-		return false;
-	}
-	
 	@Override
 	public void degenerateChunk(ChunkEntity chunk) {
 	}

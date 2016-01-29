@@ -1,6 +1,6 @@
 package com.fabianachammer.procgenf.generation;
 
-import java.util.Set;
+import java.util.Collection;
 
 /**
  * Represents a part of the world to be generated. Chunk components can be added
@@ -26,15 +26,9 @@ public interface ChunkEntity extends Cloneable {
 	ChunkEntity setParent(ChunkEntity newParent);
 
 	/**
-	 * @return The siblings of this chunk or the empty set, if the chunk has no
-	 *         siblings.
-	 */
-	Set<ChunkEntity> getSiblings();
-
-	/**
 	 * @return All children of this chunk.
 	 */
-	Set<ChunkEntity> getChildren();
+	Collection<ChunkEntity> getChildren();
 
 	/**
 	 * Adds the given child to the children of this chunk, if it wasn't added
@@ -64,7 +58,7 @@ public interface ChunkEntity extends Cloneable {
 	/**
 	 * @return set of chunk components ordered by insertion order
 	 */
-	Set<ChunkComponent> getComponents();
+	Collection<ChunkComponent> getComponents();
 
 	/**
 	 * Adds the given component to this chunk, if it wasn't added before

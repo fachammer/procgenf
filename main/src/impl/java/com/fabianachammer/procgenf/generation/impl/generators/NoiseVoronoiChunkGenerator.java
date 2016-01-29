@@ -42,7 +42,7 @@ public class NoiseVoronoiChunkGenerator implements ChunkGenerator {
 		this.maxDepth = maxDepth;
 	}
 
-	@Override
+	
 	public boolean willGenerateChunk(ChunkEntity chunk) {
 		return getChunkComponent(chunk, GenerationBoundsChunkComponent.class).isPresent()
 				&& getChunkComponent(getRoot(chunk), SeedChunkComponent.class).isPresent()
@@ -50,7 +50,10 @@ public class NoiseVoronoiChunkGenerator implements ChunkGenerator {
 	}
 
 	@Override
-	public Set<ChunkEntity> generateChunk(ChunkEntity chunk) {		
+	public Set<ChunkEntity> generateChunkChildren(ChunkEntity chunk) {		
+		if(!willGenerateChunk(chunk))
+			return null;
+		
 		GenerationBoundsChunkComponent generationBoundsComponent = getChunkComponent(chunk, GenerationBoundsChunkComponent.class).get();
 		Rectangle2D.Double generationBounds = generationBoundsComponent.getGenerationBounds();
 		double gridSize = generationBoundsComponent.getGridSize();
@@ -99,13 +102,6 @@ public class NoiseVoronoiChunkGenerator implements ChunkGenerator {
 				new double[] { rectangle.getMinY(), rectangle.getMinY(), rectangle.getMaxY(), rectangle.getMaxY() });
 	}
 
-	@Override
-	public boolean willDegenerateChunk(ChunkEntity chunk) {
-		return getChunkComponent(chunk, GenerationBoundsChunkComponent.class).isPresent()
-				&& getChunkComponent(chunk, VoronoiChunkComponent.class).isPresent()
-				&& chunk.getDepth() <= maxDepth;
-	}
-	
 	@Override
 	public void degenerateChunk(ChunkEntity chunk) {
 	}

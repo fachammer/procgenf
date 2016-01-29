@@ -1,13 +1,12 @@
 package com.fabianachammer.procgenf.generation.impl;
 
 import java.util.ArrayList;
+import java.util.Collection;
 import java.util.HashMap;
-import java.util.HashSet;
 import java.util.LinkedList;
 import java.util.List;
 import java.util.Map;
 import java.util.Queue;
-import java.util.Set;
 
 import com.fabianachammer.procgenf.generation.ChunkEntity;
 import com.fabianachammer.procgenf.generation.ChunkGenerator;
@@ -18,7 +17,7 @@ public class GenerationEngineImpl implements GenerationEngine {
 	private Queue<ChunkEntity> generationQueue;
 	private List<ChunkGenerator> chunkGenerators;
 	private ChunkEntity previousRootChunk;
-	private Map<ChunkEntity, Set<ChunkEntity>> alreadyGeneratedChunks;
+	private Map<ChunkEntity, Collection<ChunkEntity>> alreadyGeneratedChunks;
 
 	public GenerationEngineImpl() {
 		generationQueue = new LinkedList<>();
@@ -50,15 +49,15 @@ public class GenerationEngineImpl implements GenerationEngine {
 	@Override
 	public GenerationEngine run(ChunkEntity rootChunk) {
 		if(!rootChunk.equals(previousRootChunk)) {
-			Set<ChunkEntity> previousRootChildren = alreadyGeneratedChunks.remove(previousRootChunk);
+			Collection<ChunkEntity> previousRootChildren = alreadyGeneratedChunks.remove(previousRootChunk);
 			if(previousRootChildren != null)
 				alreadyGeneratedChunks.put(rootChunk.clone(), previousRootChildren);
 			
-			generateChunkWithMemoization(rootChunk);
+			generateChunkWithMemoization(rootChunk, true);
 
 			int generatedChunksCount = 1;
 			while(!generationQueue.isEmpty()) {
-				generateChunkWithMemoization(generationQueue.remove());
+				generateChunkWithMemoization(generationQueue.remove(), false);
 				generatedChunksCount++;
 			}
 			System.out.println("newly generated chunks: " + generatedChunksCount);
@@ -69,12 +68,12 @@ public class GenerationEngineImpl implements GenerationEngine {
 		return this;
 	}
 
-	private void generateChunkWithMemoization(ChunkEntity chunk) {
-		Set<ChunkEntity> newlyGenerated = generateChunk(chunk);
-		Set<ChunkEntity> alreadyGenerated = alreadyGeneratedChunks.getOrDefault(chunk, new HashSet<>());
+	private void generateChunkWithMemoization(ChunkEntity chunk, boolean isRootChunk) {
+		Collection<ChunkEntity> newlyGenerated = generateChunk(chunk);
+		Collection<ChunkEntity> alreadyGenerated = alreadyGeneratedChunks.getOrDefault(chunk, new ArrayList<>());
 
-		Set<ChunkEntity> chunksToDegenerate = new HashSet<>();
-		Set<ChunkEntity> chunksToGenerate = new HashSet<>();
+		Collection<ChunkEntity> chunksToDegenerate = new ArrayList<>();
+		Collection<ChunkEntity> chunksToGenerate = new ArrayList<>();
 
 		chunksToDegenerate.addAll(alreadyGenerated);
 		chunksToDegenerate.removeAll(newlyGenerated);
@@ -86,8 +85,7 @@ public class GenerationEngineImpl implements GenerationEngine {
 
 		alreadyGenerated.removeAll(chunksToDegenerate);
 		alreadyGenerated.addAll(chunksToGenerate);
-		ChunkEntity clone = chunk.clone();
-		alreadyGeneratedChunks.put(clone, alreadyGenerated);
+		alreadyGeneratedChunks.put(isRootChunk ? chunk.clone() : chunk, alreadyGenerated);
 	}
 
 	private void degenerateChunk(ChunkEntity chunk) {
@@ -96,12 +94,11 @@ public class GenerationEngineImpl implements GenerationEngine {
 			// degenerate children first so that they can depend on their
 			// parents while degenerating
 			// copy set to avoid ConcurrentModification issues
-			new HashSet<>(chunk.getChildren()).forEach(this::degenerateChunk);
+			new ArrayList<>(chunk.getChildren()).forEach(this::degenerateChunk);
 		}
 
-		for(int i = degenerators.size() - 1; i >= 0; i--) {
+		for(int i = degenerators.size() - 1; i >= 0; i--)
 			degenerators.get(i).degenerateChunk(chunk);
-		}
 
 		if(chunk.getParent() != null) {
 			chunk.getParent().removeChild(chunk);
@@ -112,22 +109,18 @@ public class GenerationEngineImpl implements GenerationEngine {
 	}
 
 	private List<ChunkGenerator> getGeneratorsForChunk(ChunkEntity chunk) {
-		List<ChunkGenerator> generators = new ArrayList<>(chunkGenerators);
-		generators.removeIf(g -> !g.willGenerateChunk(chunk));
-		return generators;
+		return chunkGenerators;
 	}
 
 	private List<ChunkGenerator> getDegeneratorsForChunk(ChunkEntity chunk) {
-		List<ChunkGenerator> generators = new ArrayList<>(chunkGenerators);
-		generators.removeIf(g -> !g.willDegenerateChunk(chunk));
-		return generators;
+		return chunkGenerators;
 	}
 
-	private Set<ChunkEntity> generateChunk(ChunkEntity chunk) {
+	private Collection<ChunkEntity> generateChunk(ChunkEntity chunk) {
 		List<ChunkGenerator> generators = getGeneratorsForChunk(chunk);
-		Set<ChunkEntity> subChunks = new HashSet<>();
+		List<ChunkEntity> subChunks = new ArrayList<>();
 		generators.forEach(generator -> {
-			Set<ChunkEntity> generatorSubChunks = generator.generateChunk(chunk);
+			Collection<ChunkEntity> generatorSubChunks = generator.generateChunkChildren(chunk);
 			if(generatorSubChunks != null) {
 				generatorSubChunks.forEach(subChunk -> {
 					chunk.addChild(subChunk);

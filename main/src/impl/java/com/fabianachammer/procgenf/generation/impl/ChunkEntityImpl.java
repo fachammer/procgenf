@@ -1,7 +1,10 @@
 package com.fabianachammer.procgenf.generation.impl;
 
+import java.util.ArrayList;
+import java.util.Collection;
 import java.util.Collections;
 import java.util.HashSet;
+import java.util.List;
 import java.util.Set;
 
 import org.apache.commons.lang3.builder.EqualsBuilder;
@@ -15,12 +18,12 @@ import com.fabianachammer.procgenf.generation.ChunkComponent;
 public class ChunkEntityImpl implements ChunkEntity {
 
 	private ChunkEntity parent;
-	private Set<ChunkEntity> children;
-	private Set<ChunkComponent> components;
+	private List<ChunkEntity> children;
+	private List<ChunkComponent> components;
 	
 	public ChunkEntityImpl(){
-		children = new HashSet<>();
-		components = new HashSet<>();	
+		children = new ArrayList<>();
+		components = new ArrayList<>();	
 	}
 	
 	@Override
@@ -34,7 +37,6 @@ public class ChunkEntityImpl implements ChunkEntity {
 		return this;
 	}
 
-	@Override
 	public Set<ChunkEntity> getSiblings() {
 		if(parent == null)
 			return null;		
@@ -45,8 +47,8 @@ public class ChunkEntityImpl implements ChunkEntity {
 	}
 	
 	@Override
-	public Set<ChunkEntity> getChildren() {
-		return Collections.unmodifiableSet(children);
+	public Collection<ChunkEntity> getChildren() {
+		return Collections.unmodifiableCollection(children);
 	}
 	
 	@Override
@@ -67,8 +69,8 @@ public class ChunkEntityImpl implements ChunkEntity {
 	}
 
 	@Override
-	public Set<ChunkComponent> getComponents() {
-		return Collections.unmodifiableSet(components);
+	public Collection<ChunkComponent> getComponents() {
+		return Collections.unmodifiableCollection(components);
 	}
 
 	@Override
@@ -115,8 +117,6 @@ public class ChunkEntityImpl implements ChunkEntity {
 	
 	@Override
 	public void onGenerated() {
-		children = new HashSet<>(children);
-		components = new HashSet<>(components);
 	}
 	
 	@Override
