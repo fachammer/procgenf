@@ -6,11 +6,10 @@ import static com.fabianachammer.procgenf.generation.impl.Utility.getRoot;
 
 import java.awt.geom.Rectangle2D;
 import java.util.ArrayList;
-import java.util.HashSet;
+import java.util.Collection;
 import java.util.List;
 import java.util.Optional;
 import java.util.Random;
-import java.util.Set;
 
 import org.joml.Matrix3d;
 import org.joml.Vector2d;
@@ -50,7 +49,7 @@ public class NoiseVoronoiChunkGenerator implements ChunkGenerator {
 	}
 
 	@Override
-	public Set<ChunkEntity> generateChunkChildren(ChunkEntity chunk) {		
+	public Collection<ChunkEntity> generateChunkChildren(ChunkEntity chunk) {		
 		if(!willGenerateChunk(chunk))
 			return null;
 		
@@ -93,7 +92,7 @@ public class NoiseVoronoiChunkGenerator implements ChunkGenerator {
 		
 		powerDiagram.computeDiagram();
 		
-		return new HashSet<>(subChunks);
+		return subChunks;
 	}
 	
 	public static PolygonSimple calculatePolygonForRectangle(Rectangle2D.Double rectangle) {

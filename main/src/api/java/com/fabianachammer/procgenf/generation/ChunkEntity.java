@@ -78,11 +78,5 @@ public interface ChunkEntity extends Cloneable {
 	 */
 	ChunkEntity removeComponent(ChunkComponent coponent);
 
-	/**
-	 * Called by the generation engine to tell the chunk that its generation has
-	 * finished
-	 */
-	void onGenerated();
-	
 	ChunkEntity clone();
 }

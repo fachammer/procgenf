@@ -3,9 +3,7 @@ package com.fabianachammer.procgenf.generation.impl;
 import java.util.ArrayList;
 import java.util.Collection;
 import java.util.Collections;
-import java.util.HashSet;
 import java.util.List;
-import java.util.Set;
 
 import org.apache.commons.lang3.builder.EqualsBuilder;
 import org.apache.commons.lang3.builder.HashCodeBuilder;
@@ -36,15 +34,6 @@ public class ChunkEntityImpl implements ChunkEntity {
 		this.parent = newParent;
 		return this;
 	}
-
-	public Set<ChunkEntity> getSiblings() {
-		if(parent == null)
-			return null;		
-		
-		Set<ChunkEntity> siblings = new HashSet<>(parent.getChildren());
-		siblings.remove(this);
-		return Collections.unmodifiableSet(siblings);
-	}
 	
 	@Override
 	public Collection<ChunkEntity> getChildren() {
@@ -62,7 +51,7 @@ public class ChunkEntityImpl implements ChunkEntity {
 		children.remove(child);
 		return this;
 	}
-
+	
 	@Override
 	public int getDepth() {
 		return parent != null ? parent.getDepth() + 1 : 0;
@@ -113,10 +102,6 @@ public class ChunkEntityImpl implements ChunkEntity {
 		return new ToStringBuilder(this, ToStringStyle.JSON_STYLE)
 				.append("components", components)
 				.build();
-	}
-	
-	@Override
-	public void onGenerated() {
 	}
 	
 	@Override

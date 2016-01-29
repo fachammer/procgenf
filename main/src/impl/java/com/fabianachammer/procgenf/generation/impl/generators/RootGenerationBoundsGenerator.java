@@ -1,8 +1,9 @@
 package com.fabianachammer.procgenf.generation.impl.generators;
 
 import java.awt.geom.Rectangle2D;
-import java.util.HashSet;
-import java.util.Set;
+import java.util.ArrayList;
+import java.util.Collection;
+import java.util.List;
 
 import com.fabianachammer.procgenf.generation.ChunkEntity;
 import com.fabianachammer.procgenf.generation.ChunkGenerator;
@@ -30,14 +31,14 @@ public class RootGenerationBoundsGenerator implements ChunkGenerator {
 	}
 	
 	@Override
-	public Set<ChunkEntity> generateChunkChildren(ChunkEntity chunk) {
+	public Collection<ChunkEntity> generateChunkChildren(ChunkEntity chunk) {
 		if(!willGenerateChunk(chunk))
 			return null;
 		
 		VisibilityChunkComponent visibilityComponent = getChunkComponent(chunk, VisibilityChunkComponent.class).get();
 		Rectangle2D.Double generationBounds = calculateGenerationBoundsFromVisibilityRegion(visibilityComponent.getVisibilityPolygon());
 		
-		Set<ChunkEntity> subChunks = new HashSet<>();
+		List<ChunkEntity> subChunks = new ArrayList<>();
 		subChunks.add(new ChunkEntityImpl()
 				.addComponent(new GenerationBoundsChunkComponent()
 						.setGenerationBounds(generationBounds)
