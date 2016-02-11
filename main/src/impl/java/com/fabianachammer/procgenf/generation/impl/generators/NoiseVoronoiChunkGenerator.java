@@ -57,7 +57,8 @@ public class NoiseVoronoiChunkGenerator implements ChunkGenerator {
 		Rectangle2D.Double generationBounds = generationBoundsComponent.getGenerationBounds();
 		double gridSize = generationBoundsComponent.getGridSize();
 	
-		int seed = getChunkComponent(getRoot(chunk), SeedChunkComponent.class).get().getSeed();
+		SeedChunkComponent seedComponent = getChunkComponent(getRoot(chunk), SeedChunkComponent.class).get();
+		int seed = seedComponent.getSeed();
 		
 		Optional<VoronoiChunkComponent> parent = getChunkComponentInAncestor(chunk, VoronoiChunkComponent.class);
 		Vector2d parentPosition = parent.map(p -> p.getWorldPosition()).orElse(new Vector2d(0, 0));
@@ -66,7 +67,7 @@ public class NoiseVoronoiChunkGenerator implements ChunkGenerator {
 		for(double x = generationBounds.getMinX(); x < generationBounds.getMaxX(); x += gridSize) {
 			for(double y = generationBounds.getMinY(); y < generationBounds.getMaxY(); y += gridSize) {
 				Rectangle2D.Double gridBounds = new Rectangle2D.Double(x, y, gridSize, gridSize);
-				Vector2d generatedPoint = generatePointInBounds(gridBounds, GenerationType.Noise, seed);
+				Vector2d generatedPoint = generatePointInBounds(gridBounds, seedComponent.getType(), seed);
 				generatedPoint.sub(parentPosition);
 				Site site = new Site(generatedPoint.x, generatedPoint.y, 0);
 				sites.add(site);
@@ -123,9 +124,9 @@ public class NoiseVoronoiChunkGenerator implements ChunkGenerator {
 	public static Vector2d generateNoisePointInBounds(Rectangle2D.Double bounds, int seed) {
 		random.setSeed(seed);
 		double x = Noise.valueCoherentNoise3D(bounds.getCenterX(), bounds.getCenterY(), 0, random.nextInt(),
-				NoiseQuality.BEST);
+				NoiseQuality.FAST);
 		double y = Noise.valueCoherentNoise3D(bounds.getCenterX(), bounds.getCenterY(), 0, random.nextInt(),
-				NoiseQuality.BEST);
+				NoiseQuality.FAST);
 		
 		x = mapBetweenRanges(x, -1, 1, 0.1, 0.9);
 		y = mapBetweenRanges(y, -1, 1, 0.1, 0.9);

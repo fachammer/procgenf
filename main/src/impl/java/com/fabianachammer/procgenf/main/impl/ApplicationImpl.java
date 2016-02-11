@@ -9,6 +9,7 @@ import com.fabianachammer.procgenf.generation.impl.components.VisibilityChunkCom
 import com.fabianachammer.procgenf.generation.impl.components.VoronoiChunkComponent;
 import com.fabianachammer.procgenf.generation.impl.generators.NoiseVoronoiChunkGenerator;
 import com.fabianachammer.procgenf.generation.impl.generators.RootGenerationBoundsGenerator;
+import com.fabianachammer.procgenf.generation.impl.generators.NoiseVoronoiChunkGenerator.GenerationType;
 import com.fabianachammer.procgenf.main.Application;
 
 import kn.uni.voronoitreemap.j2d.PolygonSimple;
@@ -96,7 +97,7 @@ public class ApplicationImpl implements Application {
 
 		rootChunk = new ChunkEntityImpl();
 		rootVoronoiComponent = new VoronoiChunkComponent(new Site(0, 0, 0));
-		seedComponent = new SeedChunkComponent(0);
+		seedComponent = new SeedChunkComponent(0, GenerationType.Noise);
 		visiblityComponent = new VisibilityChunkComponent(null);
 		rootChunk
 			.addComponent(visiblityComponent)
@@ -105,7 +106,7 @@ public class ApplicationImpl implements Application {
 		
 		generationEngine = new GenerationEngineImpl()
 			.addGenerator(new RootGenerationBoundsGenerator(1000, 1))
-			.addGenerator(new NoiseVoronoiChunkGenerator(5));
+			.addGenerator(new NoiseVoronoiChunkGenerator(4));
 		voronoiRenderer = new VoronoiRenderer();
 	}
 
@@ -141,9 +142,14 @@ public class ApplicationImpl implements Application {
 			if(keyPressed[GLFW_KEY_F] && !previousKeyPressed[GLFW_KEY_F])
 				fixedVisibility = !fixedVisibility;
 			
-			if(keyPressed[GLFW_KEY_R] && !previousKeyPressed[GLFW_KEY_R]) {
+			if(keyPressed[GLFW_KEY_R] && !previousKeyPressed[GLFW_KEY_R])
 				seedComponent.setSeed(random.nextInt());
-			}
+			
+			if(keyPressed[GLFW_KEY_1] && !previousKeyPressed[GLFW_KEY_1])
+				seedComponent.setType(GenerationType.Noise);
+			
+			if(keyPressed[GLFW_KEY_2] && !previousKeyPressed[GLFW_KEY_2])
+				seedComponent.setType(GenerationType.Hexagon);
 			
 			System.arraycopy(keyPressed, 0, previousKeyPressed, 0, keyPressed.length);
 			

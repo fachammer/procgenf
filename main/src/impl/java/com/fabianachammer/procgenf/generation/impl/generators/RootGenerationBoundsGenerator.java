@@ -9,6 +9,7 @@ import com.fabianachammer.procgenf.generation.ChunkEntity;
 import com.fabianachammer.procgenf.generation.ChunkGenerator;
 import com.fabianachammer.procgenf.generation.impl.ChunkEntityImpl;
 import com.fabianachammer.procgenf.generation.impl.components.GenerationBoundsChunkComponent;
+import com.fabianachammer.procgenf.generation.impl.components.SeedChunkComponent;
 import com.fabianachammer.procgenf.generation.impl.components.VisibilityChunkComponent;
 
 import kn.uni.voronoitreemap.j2d.PolygonSimple;
@@ -27,7 +28,8 @@ public class RootGenerationBoundsGenerator implements ChunkGenerator {
 	
 	
 	public boolean willGenerateChunk(ChunkEntity chunk) {
-		return getChunkComponent(chunk, VisibilityChunkComponent.class).isPresent();
+		return getChunkComponent(chunk, VisibilityChunkComponent.class).isPresent()
+				&& getChunkComponent(chunk, SeedChunkComponent.class).isPresent();
 	}
 	
 	@Override
@@ -37,12 +39,13 @@ public class RootGenerationBoundsGenerator implements ChunkGenerator {
 		
 		VisibilityChunkComponent visibilityComponent = getChunkComponent(chunk, VisibilityChunkComponent.class).get();
 		Rectangle2D.Double generationBounds = calculateGenerationBoundsFromVisibilityRegion(visibilityComponent.getVisibilityPolygon());
-		
+		SeedChunkComponent seedComponent = getChunkComponent(chunk, SeedChunkComponent.class).get();
 		List<ChunkEntity> subChunks = new ArrayList<>();
 		subChunks.add(new ChunkEntityImpl()
 				.addComponent(new GenerationBoundsChunkComponent()
 						.setGenerationBounds(generationBounds)
-						.setGridSize(gridSize)));
+						.setGridSize(gridSize))
+				.addComponent(seedComponent.clone()));
 		
 		return subChunks;
 	}

@@ -6,14 +6,17 @@ import org.apache.commons.lang3.builder.ToStringBuilder;
 import org.apache.commons.lang3.builder.ToStringStyle;
 
 import com.fabianachammer.procgenf.generation.ChunkComponent;
+import com.fabianachammer.procgenf.generation.impl.generators.NoiseVoronoiChunkGenerator.GenerationType;
 
 public class SeedChunkComponent extends ChunkComponentImpl {
 
 	private int seed;
+	private GenerationType type;
 	
-	public SeedChunkComponent(int seed) {
+	public SeedChunkComponent(int seed, GenerationType type) {
 		super();
 		this.seed = seed;
+		this.type = type;
 	}
 
 	public int getSeed() {
@@ -22,6 +25,15 @@ public class SeedChunkComponent extends ChunkComponentImpl {
 	
 	public SeedChunkComponent setSeed(int seed){
 		this.seed = seed;
+		return this;
+	}
+	
+	public GenerationType getType() {
+		return type;
+	}
+	
+	public SeedChunkComponent setType(GenerationType type) {
+		this.type = type;
 		return this;
 	}
 	
@@ -36,13 +48,15 @@ public class SeedChunkComponent extends ChunkComponentImpl {
 		SeedChunkComponent rhs = (SeedChunkComponent) obj;
 		return new EqualsBuilder()
 				.append(seed, rhs.seed)
+				.append(type, rhs.type)
 				.isEquals();
 	}
 	
 	@Override
 	public int hashCode() {
 		return new HashCodeBuilder()
-				.append(seed + 10)
+				.append(seed)
+				.append(type)
 				.toHashCode();
 	}
 	
@@ -55,6 +69,6 @@ public class SeedChunkComponent extends ChunkComponentImpl {
 
 	@Override
 	public ChunkComponent clone() {
-		return new SeedChunkComponent(seed);
+		return new SeedChunkComponent(seed, type);
 	}
 }

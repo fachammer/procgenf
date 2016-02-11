@@ -5,6 +5,7 @@ import java.util.Collection;
 import java.util.LinkedList;
 import java.util.List;
 import java.util.Queue;
+import java.util.Stack;
 
 import com.fabianachammer.procgenf.generation.ChunkEntity;
 import com.fabianachammer.procgenf.generation.ChunkGenerator;
@@ -45,22 +46,21 @@ public class GenerationEngineImpl implements GenerationEngine {
 	@Override
 	public GenerationEngine run(ChunkEntity rootChunk) {
 		if(!rootChunk.equals(previousRootChunk)) {
-			generateChunkWithMemoization(rootChunk, true);
-
+			generateChunkWithMemoization(rootChunk);
 			int generatedChunksCount = 1;
 			while(!generationQueue.isEmpty()) {
-				generateChunkWithMemoization(generationQueue.remove(), false);
+				generateChunkWithMemoization(generationQueue.remove());
 				generatedChunksCount++;
 			}
-			System.out.println("newly generated chunks: " + generatedChunksCount);
 			
+			System.out.println("newly generated chunks: " + generatedChunksCount);
 			previousRootChunk = rootChunk.clone();
 		}
-
+		
 		return this;
 	}
 
-	private void generateChunkWithMemoization(ChunkEntity chunk, boolean isRootChunk) {
+	private void generateChunkWithMemoization(ChunkEntity chunk) {
 		Collection<ChunkEntity> alreadyGenerated = new ArrayList<>(chunk.getChildren());
 		Collection<ChunkEntity> newlyGenerated = generateChunk(chunk);
 		
@@ -68,7 +68,7 @@ public class GenerationEngineImpl implements GenerationEngine {
 		Collection<ChunkEntity> chunksToGenerate = new ArrayList<>(newlyGenerated);
 
 		chunksToDegenerate.removeAll(newlyGenerated);
-		chunksToDegenerate.forEach(this::degenerateChunk);
+		degenerateChunks(chunksToDegenerate);
 		
 		chunksToGenerate.removeAll(alreadyGenerated);
 		for(ChunkEntity chunkToGenerate : chunksToGenerate) {
@@ -78,13 +78,21 @@ public class GenerationEngineImpl implements GenerationEngine {
 		}
 	}
 
-	private void degenerateChunk(ChunkEntity chunk) {
-		if(chunk.getChildren() != null) {
-			// degenerate children first so that they can depend on their
-			// parents while degenerating
-			new ArrayList<>(chunk.getChildren()).forEach(this::degenerateChunk);
+	private void degenerateChunks(Collection<ChunkEntity> chunksToDegenerate) {
+		Stack<ChunkEntity> degenerationStack = new Stack<>();
+		Queue<ChunkEntity> degenerationQueue = new LinkedList<>(chunksToDegenerate);
+		while(!degenerationQueue.isEmpty()) { 
+			ChunkEntity chunkToDegenerate = degenerationQueue.remove();
+			degenerationStack.push(chunkToDegenerate);
+			degenerationQueue.addAll(chunkToDegenerate.getChildren());
 		}
+		
+		while(!degenerationStack.isEmpty()){
+			degenerateChunk(degenerationStack.pop());
+		}
+	}
 
+	private void degenerateChunk(ChunkEntity chunk) {
 		List<ChunkGenerator> degenerators = getDegeneratorsForChunk(chunk);
 		for(int i = degenerators.size() - 1; i >= 0; i--)
 			degenerators.get(i).degenerateChunk(chunk);
