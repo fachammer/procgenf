@@ -19,3 +19,5 @@ subprojects {
 task wrapper(type: Wrapper) {
 	gradleVersion = '2.5'
 }
+
+defaultTasks 'run'
