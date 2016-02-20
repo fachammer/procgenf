@@ -9,6 +9,10 @@ Procedural generation system
 
          git clone --recursive https://github.com/fachammer/procgenf.git
 
+1. Change to the project directory:
+
+         cd procgenf
+
 1. Run the Gradle Wrapper to download Gradle and all project dependencies, build the project and start the infinite Voronoi treemap:
 
         ./gradlew

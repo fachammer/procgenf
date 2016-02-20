@@ -70,7 +70,7 @@ public class ApplicationImpl implements Application {
 		glfwWindowHint(GLFW_VISIBLE, GLFW_FALSE);
 		glfwWindowHint(GLFW_RESIZABLE, GLFW_TRUE);
 
-		window = glfwCreateWindow(WIDTH, HEIGHT, "Hello World!", NULL, NULL);
+		window = glfwCreateWindow(WIDTH, HEIGHT, "Infinite Voronoi treemap", NULL, NULL);
 		if(window == NULL)
 			throw new RuntimeException("Failed to create the GLFW window");
 
@@ -80,6 +80,9 @@ public class ApplicationImpl implements Application {
 				if(key == GLFW_KEY_ESCAPE && action == GLFW_RELEASE)
 					glfwSetWindowShouldClose(window, GLFW_TRUE);
 
+				if(key < 0)
+					return;
+				
 				if(action == GLFW_PRESS)
 					keyPressed[key] = true;
 				else if(action == GLFW_RELEASE)
@@ -105,7 +108,7 @@ public class ApplicationImpl implements Application {
 			.addComponent(rootVoronoiComponent);
 		
 		generationEngine = new GenerationEngineImpl()
-			.addGenerator(new RootGenerationBoundsGenerator(1000, 1))
+			.addGenerator(new RootGenerationBoundsGenerator(100, 1))
 			.addGenerator(new NoiseVoronoiChunkGenerator(4));
 		voronoiRenderer = new VoronoiRenderer();
 	}
