@@ -3,7 +3,8 @@ package com.fabianachammer.procgenf.main.impl;
 import com.fabianachammer.procgenf.generation.ChunkEntity;
 import com.fabianachammer.procgenf.generation.GenerationEngine;
 import com.fabianachammer.procgenf.generation.impl.ChunkEntityImpl;
-import com.fabianachammer.procgenf.generation.impl.GenerationEngineImpl;
+import com.fabianachammer.procgenf.generation.impl.MemoizedGenerationEngine;
+import com.fabianachammer.procgenf.generation.impl.RegeneratingGenerationEngine;
 import com.fabianachammer.procgenf.generation.impl.components.SeedChunkComponent;
 import com.fabianachammer.procgenf.generation.impl.components.VisibilityChunkComponent;
 import com.fabianachammer.procgenf.generation.impl.components.VoronoiChunkComponent;
@@ -107,17 +108,18 @@ public class ApplicationImpl implements Application {
 			.addComponent(seedComponent)
 			.addComponent(rootVoronoiComponent);
 		
-		generationEngine = new GenerationEngineImpl()
+		generationEngine = new MemoizedGenerationEngine()
 			.addGenerator(new RootGenerationBoundsGenerator(100, 1))
 			.addGenerator(new NoiseVoronoiChunkGenerator(4));
 		voronoiRenderer = new VoronoiRenderer();
 	}
 
-	private double zoomLevel = 0.01;
-	private static final double ZOOM_VELOCITY = 400;
+	private double zoomLevel = 1 / 100.0;
+	private static final double ZOOM_VELOCITY = 40;
 	private static final double MIN_ZOOM_LEVEL = Double.MIN_VALUE;
 	private static final double MAX_ZOOM_LEVEL = 0.5;
-	private static final double CAMERA_SPEED = 10;
+	private static final double CAMERA_SPEED = 1;
+	private long frame = 0;
 	private double deltaTime = 0.0;
 	private Vector2d cameraPosition = new Vector2d();
 	private Matrix3d viewMatrix = new Matrix3d();
@@ -126,6 +128,7 @@ public class ApplicationImpl implements Application {
 			new double[] {1, 1, -1, -1}, 
 			new double[] {1, -1, -1, 1});
 	private Random random = new Random();
+	private static final long TARGET_NANO_SECONDS_PER_FRAME = 16666666L;
 	
 	private void loop() {
 		GL.createCapabilities();
@@ -161,6 +164,8 @@ public class ApplicationImpl implements Application {
 			double yDirection = Math.signum(keyPressed[GLFW_KEY_W] ? 1 : 0) + (keyPressed[GLFW_KEY_S] ? -1 : 0);
 			double xDirection = Math.signum(keyPressed[GLFW_KEY_D] ? 1 : 0) + (keyPressed[GLFW_KEY_A] ? -1 : 0);
 
+			xDirection = 1;
+			yDirection = 1;
 			cameraPosition.y += yDirection * CAMERA_SPEED * deltaTime / zoomLevel;
 			cameraPosition.x += xDirection * CAMERA_SPEED * deltaTime / zoomLevel;
 
@@ -180,17 +185,39 @@ public class ApplicationImpl implements Application {
 			
 			visiblityComponent.setVisibilityPolygon(visibilityPolygon);
 		
-			generationEngine.run(rootChunk);
+			measure(() -> generationEngine.run(rootChunk));
 			
 			glClear(GL_COLOR_BUFFER_BIT | GL_DEPTH_BUFFER_BIT);
 			
 			voronoiRenderer.render(rootChunk, viewMatrix, visibilityPolygon);
 			
 			glfwSwapBuffers(window);			
-			
 			long t1 = System.nanoTime();
-			deltaTime = (t1 - t0) / 10.0e9;
+			long deltaNanoSeconds = t1 - t0;
+			long nanoSecondsUntilTarget = Math.max(0, TARGET_NANO_SECONDS_PER_FRAME - deltaNanoSeconds);
+			long milliSecondsUntilTarget = nanoSecondsUntilTarget / 1000000;
+			int additionalNanoSecondsUntilTarget = (int) (nanoSecondsUntilTarget - 1000000 * milliSecondsUntilTarget);
+			
+			try {
+				Thread.sleep(milliSecondsUntilTarget, additionalNanoSecondsUntilTarget);
+			} catch(InterruptedException e) {
+				e.printStackTrace();
+			}
+			
+			long t2 = System.nanoTime();
+			long deltaNanoSecondsAfterSleeep = t2 - t0;
+			deltaTime = deltaNanoSecondsAfterSleeep / 1e9;
+			frame++;
 		}
+	}
+	
+	private void measure(Runnable procedure) {
+		long procedureTimeStart = System.nanoTime();
+		procedure.run();
+		long procedureTimeEnd = System.nanoTime();
+		long procedureTimeDelta = procedureTimeEnd - procedureTimeStart;
+		double procedureDeltaMilliseconds = procedureTimeDelta / 1e6;		
+		System.out.println(String.format("%d;%f", frame, procedureDeltaMilliseconds));
 	}
 
 	private static double clamp(double value, double min, double max) {
